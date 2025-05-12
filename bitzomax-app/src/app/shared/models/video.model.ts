@@ -13,6 +13,31 @@ export interface Video {
   isPremium: boolean;
   uploadDate: Date;
   tags: string[];
+  
+  // Additional fields for admin panel
+  poemText?: string;       // Poem text associated with the video
+  hashtags?: string[];     // Hashtags for better categorization
+  seoTitle?: string;       // SEO optimized title
+  seoDescription?: string; // SEO optimized description
+  seoKeywords?: string[];  // SEO keywords
+  originalFormat?: string; // Original video format before conversion
+  conversionStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  engagementRate?: number; // Calculated engagement metric
+  commentCount?: number;   // Number of comments
+  shareCount?: number;     // Number of shares
+}
+
+/**
+ * Video Analytics model for dashboard stats
+ */
+export interface VideoAnalytics {
+  videoId: string;
+  viewsOverTime: {date: Date, count: number}[];
+  likesOverTime: {date: Date, count: number}[];
+  commentsOverTime: {date: Date, count: number}[];
+  averageWatchTime: number;
+  engagementRate: number;
+  conversionRate?: number; // For premium videos
 }
 
 /**

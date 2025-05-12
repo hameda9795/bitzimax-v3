@@ -1,0 +1,272 @@
+<div class="cyberpunk-container">
+  <div class="dashboard-header">
+    <h1 class="neon-text">ADMIN DASHBOARD</h1>
+    <div class="grid-line"></div>
+  </div>
+
+  <!-- Time Range Selector -->
+  <div class="time-range-selector">
+    <span class="time-label">TIME RANGE:</span>
+    <div class="selector-buttons">
+      <button *ngFor="let range of timeRanges" 
+              [class.active]="selectedTimeRange === range.value"
+              (click)="timeRangeChanged(range.value)"
+              class="cyberpunk-button-small">
+        {{ range.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="cyberpunk-stat-card">
+      <div class="stat-icon">
+        <mat-icon>visibility</mat-icon>
+      </div>
+      <div class="stat-details">
+        <div class="stat-value neon-text-blue">{{ formatNumber(totalViews) }}</div>
+        <div class="stat-label">TOTAL VIEWS</div>
+      </div>
+    </div>
+
+    <div class="cyberpunk-stat-card">
+      <div class="stat-icon">
+        <mat-icon>thumb_up</mat-icon>
+      </div>
+      <div class="stat-details">
+        <div class="stat-value neon-text-pink">{{ formatNumber(totalLikes) }}</div>
+        <div class="stat-label">TOTAL LIKES</div>
+      </div>
+    </div>
+
+    <div class="cyberpunk-stat-card">
+      <div class="stat-icon">
+        <mat-icon>movie</mat-icon>
+      </div>
+      <div class="stat-details">
+        <div class="stat-value neon-text-yellow">{{ totalVideos }}</div>
+        <div class="stat-label">VIDEOS</div>
+      </div>
+    </div>
+
+    <div class="cyberpunk-stat-card">
+      <div class="stat-icon">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-details">
+        <div class="stat-value neon-text-blue">{{ formatNumber(totalUsers) }}</div>
+        <div class="stat-label">USERS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="charts-grid">
+    <!-- Views Chart -->
+    <div class="cyberpunk-card chart-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">VIEWS OVER TIME</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content chart-container">
+        <div class="chart-wrapper">
+          <!-- Placeholder image until charts are configured properly -->
+          <img src="https://via.placeholder.com/800x300/1A1A1A/00F3FF?text=Views+Chart" 
+               alt="Views over time chart" 
+               class="chart-placeholder">
+        </div>
+      </div>
+    </div>
+
+    <!-- Likes Chart -->
+    <div class="cyberpunk-card chart-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">LIKES OVER TIME</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content chart-container">
+        <div class="chart-wrapper">
+          <!-- Placeholder image until charts are configured properly -->
+          <img src="https://via.placeholder.com/800x300/1A1A1A/FF00FF?text=Likes+Chart" 
+               alt="Likes over time chart" 
+               class="chart-placeholder">
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Chart -->
+    <div class="cyberpunk-card chart-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">USER DISTRIBUTION</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content chart-container">
+        <div class="doughnut-container">
+          <div class="chart-wrapper">
+            <!-- Placeholder image until charts are configured properly -->
+            <img src="https://via.placeholder.com/500x300/1A1A1A/00F3FF?text=User+Distribution" 
+                 alt="User distribution chart" 
+                 class="chart-placeholder">
+          </div>
+          <div class="doughnut-center">
+            <span class="premium-percentage">{{premiumPercentage}}%</span>
+            <span class="premium-label">PREMIUM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Engagement Chart -->
+    <div class="cyberpunk-card chart-card wide-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">VIDEO ENGAGEMENT</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content chart-container">
+        <div class="chart-wrapper">
+          <!-- Placeholder image until charts are configured properly -->
+          <img src="https://via.placeholder.com/1200x300/1A1A1A/FFFF00?text=Engagement+Chart" 
+               alt="Video engagement chart" 
+               class="chart-placeholder">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Info -->
+  <div class="cyberpunk-card revenue-card">
+    <div class="card-header">
+      <h2 class="neon-text-sub">REVENUE STATS</h2>
+      <div class="card-accent"></div>
+    </div>
+    <div class="card-content">
+      <div class="revenue-grid">
+        <div class="revenue-item">
+          <div class="revenue-title">CURRENT MONTH</div>
+          <div class="revenue-value">${{ monthlyRevenue }}</div>
+        </div>
+        
+        <div class="revenue-item">
+          <div class="revenue-title">LAST MONTH</div>
+          <div class="revenue-value">${{ lastMonthRevenue }}</div>
+        </div>
+        
+        <div class="revenue-item">
+          <div class="revenue-title">CHANGE</div>
+          <div class="revenue-change" [ngClass]="{'positive': revenueChange > 0, 'negative': revenueChange < 0}">
+            {{ revenueChange > 0 ? '+' : '' }}{{ revenueChange }}%
+            <mat-icon>{{ revenueChange > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Tables -->
+  <div class="content-tables">
+    <!-- Top Videos -->
+    <div class="cyberpunk-card table-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">TOP VIDEOS</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content">
+        <table class="cyberpunk-table">
+          <thead>
+            <tr>
+              <th>VIDEO</th>
+              <th>VIEWS</th>
+              <th>LIKES</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let video of topVideos">
+              <td>
+                <div class="video-info">
+                  <div class="video-thumbnail">
+                    <img [src]="video.thumbnailUrl" alt="{{video.title}} thumbnail" title="{{video.title}}">
+                    <span class="video-duration">{{ formatDuration(video.duration) }}</span>
+                  </div>
+                  <div class="video-meta">
+                    <div class="video-title">{{ video.title }}</div>
+                    <div class="video-date">{{ video.uploadDate | date:'mediumDate' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ formatNumber(video.views) }}</td>
+              <td>{{ formatNumber(video.likes) }}</td>
+              <td>
+                <span class="status-badge" [class.premium]="video.isPremium">
+                  {{ video.isPremium ? 'PREMIUM' : 'FREE' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Videos -->
+    <div class="cyberpunk-card table-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">RECENT UPLOADS</h2>
+        <div class="card-accent"></div>
+      </div>
+      <div class="card-content">
+        <table class="cyberpunk-table">
+          <thead>
+            <tr>
+              <th>VIDEO</th>
+              <th>UPLOAD DATE</th>
+              <th>VIEWS</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let video of recentVideos">
+              <td>
+                <div class="video-info">
+                  <div class="video-thumbnail">
+                    <img [src]="video.thumbnailUrl" alt="{{video.title}} thumbnail" title="{{video.title}}">
+                    <span class="video-duration">{{ formatDuration(video.duration) }}</span>
+                  </div>
+                  <div class="video-meta">
+                    <div class="video-title">{{ video.title }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ video.uploadDate | date:'MMM d, y, h:mm a' }}</td>
+              <td>{{ formatNumber(video.views) }}</td>
+              <td>
+                <span class="status-badge" [class.premium]="video.isPremium">
+                  {{ video.isPremium ? 'PREMIUM' : 'FREE' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="quick-links">
+    <div class="link-card">
+      <mat-icon>add_circle</mat-icon>
+      <span>UPLOAD VIDEO</span>
+      <a [routerLink]="['/admin/upload']" class="card-link"></a>
+    </div>
+    <div class="link-card">
+      <mat-icon>movie</mat-icon>
+      <span>MANAGE VIDEOS</span>
+      <a [routerLink]="['/admin/videos']" class="card-link"></a>
+    </div>
+    <div class="link-card">
+      <mat-icon>people</mat-icon>
+      <span>USER MANAGEMENT</span>
+      <a [routerLink]="['/admin/users']" class="card-link"></a>
+    </div>
+  </div>
+
+</div>

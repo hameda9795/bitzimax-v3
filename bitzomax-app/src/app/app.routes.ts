@@ -9,5 +9,10 @@ export const routes: Routes = [
   { path: 'videos', component: HomeComponent },
   { path: 'video/:id', component: VideoComponent },
   { path: 'profile', component: ProfileComponent },
+  { 
+    path: 'admin', 
+    loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule),
+    // Note: Add proper authentication guard here in production
+  },
   { path: '**', redirectTo: '' } // Handle 404s by redirecting to home
 ];

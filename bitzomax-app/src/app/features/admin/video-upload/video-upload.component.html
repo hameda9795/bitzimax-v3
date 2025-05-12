@@ -1,0 +1,252 @@
+<div class="cyberpunk-container">
+  <div class="cyberpunk-header">
+    <h1 class="neon-text">VIDEO UPLOAD</h1>
+    <div class="grid-line"></div>
+  </div>
+
+  <div class="upload-container">
+    <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+      
+      <!-- Video Upload Section -->
+      <div class="cyberpunk-card">
+        <div class="card-header">
+          <h2 class="neon-text-sub">VIDEO FILE</h2>
+          <div class="card-accent"></div>
+        </div>
+        
+        <div class="card-content">
+          <div class="file-upload-container">
+            <div class="upload-area" *ngIf="!videoFile">
+              <label for="videoFile" class="cyberpunk-button">
+                <mat-icon>videocam</mat-icon>
+                Select Video
+              </label>
+              <input type="file" id="videoFile" 
+                    accept="video/*" 
+                    (change)="onVideoSelected($event)" 
+                    class="hidden-input">
+              <p class="hint-text">MP4, MOV, AVI, etc. (Max 500MB)</p>
+            </div>
+            
+            <div class="file-info" *ngIf="videoFile">
+              <div class="file-preview">
+                <mat-icon>movie</mat-icon>
+                <div class="file-name">{{ videoFile.name }}</div>
+              </div>
+              
+              <div class="file-details">
+                <p>Original Size: {{ formatFileSize(originalFileSize) }}</p>
+                <p>Format: {{ videoFile.type }}</p>
+                
+                <div class="conversion-info" *ngIf="!isConverting && !conversionComplete">
+                  <p class="highlight-text">Estimated WebM Size: {{ formatFileSize(convertedFileSize) }}</p>
+                  <p class="highlight-text">Potential Reduction: {{ getSizeReductionPercentage() }}%</p>
+                  <button type="button" mat-raised-button color="accent" 
+                          class="cyberpunk-button" 
+                          (click)="convertVideoToWebM()">
+                    <mat-icon>transform</mat-icon>
+                    Convert to WebM
+                  </button>
+                </div>
+                
+                <div class="progress-container" *ngIf="isConverting">
+                  <p class="highlight-text blink-text">CONVERTING...</p>
+                  <mat-progress-bar mode="determinate" [value]="conversionProgress" color="accent"></mat-progress-bar>
+                  <p>{{ conversionProgress }}%</p>
+                </div>
+                
+                <div class="conversion-success" *ngIf="conversionComplete">
+                  <p class="success-text">
+                    <mat-icon>check_circle</mat-icon>
+                    Conversion Complete!
+                  </p>
+                  <p>New Size: {{ formatFileSize(convertedFileSize) }}</p>
+                  <p class="highlight-text">{{ getSizeReductionPercentage() }}% Smaller!</p>
+                </div>
+                
+                <button type="button" mat-stroked-button 
+                        class="cyberpunk-button-outline" 
+                        (click)="videoFile = null; convertedFile = null; conversionComplete = false;">
+                  Change Video
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Thumbnail Upload Section -->
+      <div class="cyberpunk-card">
+        <div class="card-header">
+          <h2 class="neon-text-sub">COVER IMAGE</h2>
+          <div class="card-accent"></div>
+        </div>
+        
+        <div class="card-content">
+          <div class="file-upload-container">
+            <div class="upload-area" *ngIf="!thumbnailPreview">
+              <label for="thumbnailFile" class="cyberpunk-button">
+                <mat-icon>image</mat-icon>
+                Select Image
+              </label>
+              <input type="file" id="thumbnailFile" 
+                    accept="image/*" 
+                    (change)="onThumbnailSelected($event)" 
+                    class="hidden-input">
+              <p class="hint-text">JPG, PNG, WebP (Recommended size: 1280x720)</p>
+            </div>
+            
+            <div class="thumbnail-preview" *ngIf="thumbnailPreview">
+              <img [src]="thumbnailPreview" alt="Thumbnail preview">
+              <button type="button" mat-icon-button 
+                      class="remove-thumbnail" 
+                      (click)="thumbnailFile = null; thumbnailPreview = null;">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Metadata Section -->
+      <div class="cyberpunk-card">
+        <div class="card-header">
+          <h2 class="neon-text-sub">METADATA</h2>
+          <div class="card-accent"></div>
+        </div>
+        
+        <div class="card-content">
+          <div class="form-grid">
+            <!-- Title -->
+            <mat-form-field appearance="fill" class="cyberpunk-field">
+              <mat-label>Title</mat-label>
+              <input matInput formControlName="title" placeholder="Enter video title">
+              <mat-icon matSuffix>title</mat-icon>
+              <mat-error *ngIf="uploadForm.get('title')?.invalid">
+                Title is required (min 5 characters)
+              </mat-error>
+            </mat-form-field>
+            
+            <!-- Description -->
+            <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="4" 
+                        placeholder="Enter video description"></textarea>
+              <mat-error *ngIf="uploadForm.get('description')?.invalid">
+                Description is required (min 20 characters)
+              </mat-error>
+            </mat-form-field>
+            
+            <!-- Poem Text -->
+            <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+              <mat-label>Poem Text</mat-label>
+              <textarea matInput formControlName="poemText" rows="6" 
+                        placeholder="Enter poem associated with this video"></textarea>
+            </mat-form-field>
+            
+            <!-- Hashtags -->
+            <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+              <mat-label>Hashtags</mat-label>
+              <mat-chip-grid #chipGrid>
+                <mat-chip-row *ngFor="let hashtag of hashtags" 
+                           (removed)="removeHashtag(hashtag)">
+                  #{{hashtag}}
+                  <button type="button" matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+                <input placeholder="Add hashtag..." 
+                      [matChipInputFor]="chipGrid"
+                      [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                      (matChipInputTokenEnd)="addHashtag($event)">
+              </mat-chip-grid>
+              <mat-hint>Press Enter to add</mat-hint>
+            </mat-form-field>
+            
+            <div class="cyberpunk-divider">
+              <span>SEO DATA</span>
+              <div class="divider-line"></div>
+            </div>
+            
+            <!-- SEO Title -->
+            <mat-form-field appearance="fill" class="cyberpunk-field">
+              <mat-label>SEO Title</mat-label>
+              <input matInput formControlName="seoTitle" placeholder="SEO optimized title">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            
+            <!-- SEO Description -->
+            <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+              <mat-label>SEO Description</mat-label>
+              <textarea matInput formControlName="seoDescription" rows="3" 
+                        placeholder="SEO optimized description"></textarea>
+            </mat-form-field>
+            
+            <!-- SEO Keywords -->
+            <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+              <mat-label>SEO Keywords</mat-label>
+              <mat-chip-grid #keywordGrid>
+                <mat-chip-row *ngFor="let keyword of seoKeywords" 
+                           (removed)="removeSeoKeyword(keyword)">
+                  {{keyword}}
+                  <button type="button" matChipRemove>
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                </mat-chip-row>
+                <input placeholder="Add keyword..." 
+                      [matChipInputFor]="keywordGrid"
+                      [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                      (matChipInputTokenEnd)="addSeoKeyword($event)">
+              </mat-chip-grid>
+              <mat-hint>Press Enter to add</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Premium Toggle -->
+      <div class="cyberpunk-card small-card">
+        <div class="card-header">
+          <h2 class="neon-text-sub">VIDEO ACCESS</h2>
+          <div class="card-accent"></div>
+        </div>
+        
+        <div class="card-content">
+          <div class="premium-toggle">
+            <mat-slide-toggle formControlName="isPremium" color="accent" 
+                             class="cyberpunk-toggle">
+                PREMIUM CONTENT
+            </mat-slide-toggle>
+            <div class="toggle-description">
+              <p *ngIf="uploadForm.get('isPremium')?.value">
+                <mat-icon>lock</mat-icon>
+                This video will only be available to premium subscribers
+              </p>
+              <p *ngIf="!uploadForm.get('isPremium')?.value">
+                <mat-icon>public</mat-icon>
+                This video will be available to all users
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Submit Button -->
+      <div class="submit-container">
+        <button type="submit" mat-raised-button color="primary" 
+                class="cyberpunk-submit-button"
+                [disabled]="uploadForm.invalid || (!videoFile && !convertedFile) || !thumbnailFile || isUploading">
+          <mat-icon>cloud_upload</mat-icon>
+          UPLOAD VIDEO
+        </button>
+        
+        <div class="upload-progress" *ngIf="isUploading">
+          <p class="uploading-text blink-text">UPLOADING...</p>
+          <mat-progress-bar mode="determinate" [value]="uploadProgress" color="primary"></mat-progress-bar>
+          <p>{{ uploadProgress }}%</p>
+        </div>
+      </div>
+      
+    </form>
+  </div>
+</div>

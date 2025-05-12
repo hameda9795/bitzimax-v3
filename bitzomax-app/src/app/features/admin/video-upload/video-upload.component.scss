@@ -1,0 +1,475 @@
+// Cyberpunk Theme Variables
+$neon-blue: #00f3ff;
+$neon-pink: #ff00ff;
+$neon-yellow: #ffff00;
+$dark-bg: #121212;
+$dark-card: #1a1a1a;
+$grid-line: rgba(0, 243, 255, 0.5);
+
+// Cyberpunk Container
+.cyberpunk-container {
+  background-color: $dark-bg;
+  color: white;
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Rajdhani', 'Roboto', sans-serif;
+  
+  // Grid lines background
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(to right, $grid-line 1px, transparent 1px) 0 0 / 40px 100%,
+      linear-gradient(to bottom, $grid-line 1px, transparent 1px) 0 0 / 100% 40px;
+    opacity: 0.1;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  // Diagonal accent line
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, $neon-blue, $neon-pink);
+    z-index: 1;
+  }
+}
+
+// Header
+.cyberpunk-header {
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+  
+  h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  
+  .grid-line {
+    height: 2px;
+    background: linear-gradient(90deg, $neon-blue, transparent);
+    margin-top: 0.5rem;
+  }
+}
+
+// Neon Text Effects
+.neon-text {
+  color: white;
+  text-shadow: 
+    0 0 5px $neon-blue,
+    0 0 10px $neon-blue,
+    0 0 20px $neon-blue;
+  font-family: 'Rajdhani', 'Orbitron', sans-serif;
+  text-transform: uppercase;
+}
+
+.neon-text-sub {
+  color: $neon-blue;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+// Upload Container
+.upload-container {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+// Cyberpunk Card
+.cyberpunk-card {
+  background-color: $dark-card;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(45deg, transparent 50%, rgba(0, 243, 255, 0.1) 50%);
+  }
+  
+  &.small-card {
+    max-width: 500px;
+  }
+  
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .card-accent {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, $neon-blue, $neon-pink);
+      clip-path: polygon(0 0, 100% 0, 100% 100%);
+    }
+  }
+  
+  .card-content {
+    padding: 1.5rem;
+  }
+}
+
+// File Upload
+.file-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  .upload-area {
+    border: 2px dashed rgba(0, 243, 255, 0.5);
+    border-radius: 4px;
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      border-color: $neon-blue;
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+    
+    .hint-text {
+      margin-top: 1rem;
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .file-info {
+    width: 100%;
+    
+    .file-preview {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      mat-icon {
+        color: $neon-blue;
+        margin-right: 1rem;
+        font-size: 2rem;
+        height: 2rem;
+        width: 2rem;
+      }
+      
+      .file-name {
+        font-size: 1.1rem;
+        word-break: break-all;
+      }
+    }
+    
+    .file-details {
+      p {
+        margin: 0.5rem 0;
+      }
+      
+      .highlight-text {
+        color: $neon-pink;
+        font-weight: 600;
+      }
+      
+      .blink-text {
+        animation: blink 1.5s infinite;
+      }
+      
+      .success-text {
+        color: #00ff7f;
+        display: flex;
+        align-items: center;
+        
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Hidden file input
+.hidden-input {
+  display: none;
+}
+
+// Thumbnail Preview
+.thumbnail-preview {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  }
+  
+  .remove-thumbnail {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+  }
+}
+
+// Form Grid Layout
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+// Cyberpunk Form Field Styling
+.cyberpunk-field {
+  width: 100%;
+  
+  ::ng-deep {
+    .mat-mdc-form-field-flex {
+      background: rgba(30, 30, 30, 0.8);
+      border-left: 2px solid $neon-blue;
+    }
+    
+    .mat-mdc-text-field-wrapper {
+      background-color: transparent;
+    }
+    
+    .mat-mdc-form-field-label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .mdc-line-ripple::after {
+      border-color: $neon-blue;
+    }
+    
+    .mat-mdc-form-field-icon-suffix {
+      color: $neon-blue;
+    }
+    
+    .mdc-text-field--focused {
+      .mat-mdc-form-field-flex {
+        border-left-color: $neon-pink;
+      }
+    }
+    
+    // For textarea
+    textarea.mat-mdc-input-element {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    // For chip list
+    .mat-mdc-chip {
+      background-color: rgba(0, 243, 255, 0.2);
+      color: white;
+      
+      .mat-mdc-chip-remove {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+}
+
+// Cyberpunk Divider
+.cyberpunk-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  color: rgba(255, 255, 255, 0.7);
+  
+  span {
+    padding-right: 1rem;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+  }
+  
+  .divider-line {
+    height: 1px;
+    flex-grow: 1;
+    background: linear-gradient(90deg, $neon-blue, transparent);
+  }
+}
+
+// Premium Toggle
+.premium-toggle {
+  display: flex;
+  flex-direction: column;
+  
+  .cyberpunk-toggle {
+    ::ng-deep {
+      .mat-mdc-slide-toggle-thumb {
+        background-color: $neon-blue;
+      }
+      
+      .mdc-switch:enabled .mdc-switch__track::after {
+        background-color: rgba(255, 0, 255, 0.5);
+      }
+    }
+  }
+  
+  .toggle-description {
+    margin-top: 1rem;
+    
+    p {
+      display: flex;
+      align-items: center;
+      
+      mat-icon {
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+// Submit Button & Progress
+.submit-container {
+  text-align: center;
+  margin-top: 2rem;
+  
+  .cyberpunk-submit-button {
+    font-size: 1.2rem;
+    padding: 0.5rem 2rem;
+    min-width: 200px;
+    background: linear-gradient(90deg, $neon-blue, $neon-pink);
+    border: none;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+    
+    &:not([disabled]):hover::before {
+      left: 100%;
+    }
+    
+    &[disabled] {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
+  
+  .upload-progress {
+    margin-top: 1.5rem;
+    
+    .uploading-text {
+      color: $neon-blue;
+      margin-bottom: 0.5rem;
+    }
+    
+    mat-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+// Button Styling
+.cyberpunk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(0, 243, 255, 0.2);
+  color: $neon-blue;
+  border: 1px solid $neon-blue;
+  border-radius: 2px;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(0, 243, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+  }
+  
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+.cyberpunk-button-outline {
+  background-color: transparent;
+  color: $neon-blue;
+  border: 1px solid $neon-blue;
+  margin-top: 1rem;
+  
+  &:hover {
+    background-color: rgba(0, 243, 255, 0.2);
+  }
+}
+
+// Animation
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+// Responsive Adjustments
+@media (max-width: 768px) {
+  .cyberpunk-container {
+    padding: 1rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .cyberpunk-header h1 {
+    font-size: 2rem;
+  }
+}

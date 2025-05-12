@@ -1,0 +1,660 @@
+// Cyberpunk Theme Variables
+$neon-blue: #00f3ff;
+$neon-pink: #ff00ff;
+$neon-yellow: #ffff00;
+$dark-bg: #121212;
+$dark-card: #1a1a1a;
+$grid-line: rgba(0, 243, 255, 0.5);
+
+// Cyberpunk Container with Grid Lines
+.cyberpunk-container {
+  background-color: $dark-bg;
+  color: white;
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Rajdhani', 'Roboto', sans-serif;
+  
+  // Grid lines background
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(to right, $grid-line 1px, transparent 1px) 0 0 / 40px 100%,
+      linear-gradient(to bottom, $grid-line 1px, transparent 1px) 0 0 / 100% 40px;
+    opacity: 0.1;
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  // Diagonal accent line
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, $neon-blue, $neon-pink);
+    z-index: 1;
+  }
+}
+
+// Dashboard Header
+.dashboard-header {
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+  
+  h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  
+  .grid-line {
+    height: 2px;
+    background: linear-gradient(90deg, $neon-blue, transparent);
+    margin-top: 0.5rem;
+  }
+}
+
+// Neon Text Effects
+.neon-text {
+  color: white;
+  text-shadow: 
+    0 0 5px $neon-blue,
+    0 0 10px $neon-blue,
+    0 0 20px $neon-blue;
+  font-family: 'Rajdhani', 'Orbitron', sans-serif;
+  text-transform: uppercase;
+}
+
+.neon-text-sub {
+  color: $neon-blue;
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+// Control Panel
+.control-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+// Search and Filter Section
+.search-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+// Cyberpunk Search Input
+.cyberpunk-search {
+  display: flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 243, 255, 0.5);
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  width: 300px;
+  
+  mat-icon {
+    color: $neon-blue;
+    margin-right: 0.5rem;
+  }
+  
+  input {
+    background: transparent;
+    border: none;
+    color: white;
+    outline: none;
+    width: 100%;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+  
+  &:focus-within {
+    border-color: $neon-blue;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+  }
+}
+
+// Filter Buttons
+.filter-buttons {
+  display: flex;
+  gap: 0.25rem;
+  
+  .filter-button {
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    
+    &:first-child {
+      border-radius: 4px 0 0 4px;
+    }
+    
+    &:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+    
+    &:hover {
+      background-color: rgba(0, 243, 255, 0.1);
+      color: white;
+    }
+    
+    &.active {
+      background-color: rgba(0, 243, 255, 0.2);
+      border-color: $neon-blue;
+      color: $neon-blue;
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+    
+    &.premium {
+      &.active {
+        background-color: rgba(255, 0, 255, 0.2);
+        border-color: $neon-pink;
+        color: $neon-pink;
+        box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+      }
+    }
+  }
+}
+
+// Bulk Actions
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: 1px solid $neon-blue;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  animation: fadeIn 0.3s ease-in-out;
+  
+  .selected-count {
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+// Small Cyberpunk Button
+.cyberpunk-button-small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  background-color: rgba(0, 243, 255, 0.1);
+  color: $neon-blue;
+  border: 1px solid $neon-blue;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  mat-icon {
+    font-size: 1rem;
+    height: 1rem;
+    width: 1rem;
+    margin-right: 0.25rem;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 243, 255, 0.2);
+    box-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+  }
+  
+  &.danger {
+    background-color: rgba(255, 0, 0, 0.1);
+    color: #ff4d4d;
+    border-color: #ff4d4d;
+    
+    &:hover {
+      background-color: rgba(255, 0, 0, 0.2);
+      box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+  }
+}
+
+// Regular Cyberpunk Button
+.cyberpunk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(0, 243, 255, 0.2);
+  color: $neon-blue;
+  border: 1px solid $neon-blue;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(0, 243, 255, 0.4);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+  }
+  
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+// Table Card
+.table-card {
+  position: relative;
+  z-index: 2;
+  
+  .card-header {
+    .video-count {
+      display: flex;
+      align-items: center;
+      
+      span {
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-right: 1rem;
+      }
+    }
+  }
+}
+
+// Cyberpunk Card styling
+.cyberpunk-card {
+  background-color: $dark-card;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, transparent 50%, rgba(0, 243, 255, 0.1) 50%);
+    z-index: 1;
+  }
+  
+  .card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .card-accent {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, $neon-blue, $neon-pink);
+      clip-path: polygon(0 0, 100% 0, 100% 100%);
+    }
+  }
+  
+  .card-content {
+    padding: 0; // No padding here as table needs to extend to edges
+  }
+}
+
+// Loading Container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 1rem;
+  
+  .cyberpunk-loader {
+    width: 60px;
+    height: 60px;
+    border: 3px solid transparent;
+    border-top: 3px solid $neon-blue;
+    border-right: 3px solid $neon-pink;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      border-top: 3px solid $neon-yellow;
+      border-left: 3px solid $neon-yellow;
+      animation: spin 1.5s linear reverse infinite;
+    }
+  }
+  
+  .loading-text {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: $neon-blue;
+    letter-spacing: 1px;
+    animation: blink 1.5s infinite;
+  }
+}
+
+// Table Container
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $neon-blue;
+    border-radius: 3px;
+  }
+}
+
+// Cyberpunk Table Styling
+.cyberpunk-table {
+  width: 100%;
+  
+  // Header row
+  .mat-mdc-header-row {
+    background-color: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+  }
+  
+  // Header cell
+  .mat-mdc-header-cell {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 1rem;
+    background-color: transparent;
+    border: none;
+  }
+  
+  // Data row
+  .mat-mdc-row {
+    background-color: transparent;
+    transition: background-color 0.3s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background-color: rgba(0, 243, 255, 0.05);
+    }
+  }
+  
+  // Data cell
+  .mat-mdc-cell {
+    color: white;
+    padding: 1rem;
+    border: none;
+  }
+  
+  // No data row
+  .no-data-cell {
+    padding: 2rem !important;
+    
+    .no-data {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.5);
+      
+      mat-icon {
+        font-size: 2rem;
+        height: 2rem;
+        width: 2rem;
+        margin-bottom: 1rem;
+      }
+    }
+  }
+}
+
+// Table Elements Styling
+
+// Video thumbnail in table
+.video-thumbnail {
+  width: 100px;
+  position: relative;
+  
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: 3px;
+    display: block;
+  }
+  
+  .video-duration {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+}
+
+// Video title cell
+.video-title-cell {
+  max-width: 300px;
+  
+  .video-title {
+    font-weight: 500;
+    color: $neon-blue;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .video-info {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// Status badge
+.status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background-color: rgba(0, 243, 255, 0.2);
+  color: $neon-blue;
+  
+  &.premium {
+    background-color: rgba(255, 0, 255, 0.2);
+    color: $neon-pink;
+  }
+}
+
+// Premium toggle
+.premium-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// Toggle and action buttons
+.toggle-button, .action-button {
+  background-color: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.35rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  mat-icon {
+    font-size: 1.1rem;
+    height: 1.1rem;
+    width: 1.1rem;
+  }
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  
+  &.edit:hover {
+    color: $neon-blue;
+  }
+  
+  &.delete:hover {
+    color: #ff4d4d;
+  }
+}
+
+// Action buttons container
+.action-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+// Cyberpunk checkbox styling
+::ng-deep .cyberpunk-checkbox {
+  .mdc-checkbox {
+    &.mat-mdc-checkbox-checked {
+      .mdc-checkbox__background {
+        background-color: $neon-blue !important;
+        border-color: $neon-blue !important;
+      }
+    }
+  }
+  
+  .mdc-checkbox__background {
+    border-color: rgba(0, 243, 255, 0.5) !important;
+  }
+  
+  .mdc-checkbox__ripple {
+    background-color: rgba(0, 243, 255, 0.1) !important;
+  }
+}
+
+// Paginator styling
+::ng-deep .cyberpunk-paginator {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  color: white !important;
+  border-top: 1px solid rgba(0, 243, 255, 0.3);
+  border-radius: 0 0 4px 4px;
+  
+  .mat-mdc-paginator-container {
+    justify-content: center;
+    min-height: 56px;
+  }
+  
+  .mat-mdc-paginator-range-label, 
+  .mat-mdc-paginator-page-size-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .mat-mdc-icon-button {
+    color: $neon-blue !important;
+    
+    &.mat-mdc-paginator-navigation-first,
+    &.mat-mdc-paginator-navigation-previous,
+    &.mat-mdc-paginator-navigation-next,
+    &.mat-mdc-paginator-navigation-last {
+      &:disabled {
+        color: rgba(0, 243, 255, 0.3) !important;
+      }
+    }
+  }
+  
+  .mat-mdc-paginator-page-size-select {
+    .mat-mdc-select-value, 
+    .mat-mdc-select-arrow {
+      color: $neon-blue !important;
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .cyberpunk-container {
+    padding: 1rem;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
+  
+  .control-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-container {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cyberpunk-search {
+    width: 100%;
+  }
+  
+  .video-title-cell {
+    max-width: 200px;
+  }
+}
