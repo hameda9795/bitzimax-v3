@@ -78,7 +78,34 @@ export class VideoService {
   public videos$ = this.videosSubject.asObservable();
 
   constructor(private http: HttpClient) {
-    this.loadVideos(); // Load videos initially
+    console.log('VideoService initialized with API URL:', this.apiUrl);
+    
+    // Verify API URL is accessible
+    this.checkApiHealth();
+    
+    // Load videos initially
+    this.loadVideos();
+  }
+
+  /**
+   * Check if the API is accessible
+   */
+  private checkApiHealth(): void {
+    this.http.get(`${this.apiUrl}`, { observe: 'response' })
+      .pipe(
+        catchError(error => {
+          console.error('API health check failed:', error);
+          return of({ status: error.status || 0, statusText: error.statusText || 'Unknown error' });
+        })
+      )
+      .subscribe(response => {
+        if (response.status === 200) {
+          console.log('API health check successful');
+        } else {
+          console.error('API health check failed:', response.status, response.statusText);
+          alert('Warning: Cannot connect to video API. Please check if the backend server is running at ' + this.apiUrl);
+        }
+      });
   }
 
   /**
@@ -128,6 +155,7 @@ export class VideoService {
    * Get all videos with pagination
    */
   getVideos(pageRequest: PageRequest = { page: 0, size: 10 }): Observable<PageResponse<Video>> {
+    console.log('VideoService.getVideos called with pageRequest:', pageRequest);
     this.loadingSubject.next(true);
     
     let params = new HttpParams()
@@ -149,14 +177,23 @@ export class VideoService {
       params = params.set('filterType', pageRequest.filterType);
     }
     
+    console.log('Making request to:', `${this.apiUrl}/page`, 'with params:', params.toString());
+    
     return this.http.get<VideoPageResponse>(`${this.apiUrl}/page`, { params })
       .pipe(
+        tap(response => console.log('Raw API response:', response)),
         map((response: VideoPageResponse): PageResponse<Video> => ({
           ...response,
           content: response.content.map((video: VideoResponse): Video => this.convertVideoResponse(video))
         })),
-        tap((): void => this.loadingSubject.next(false)),
-        catchError((error: HttpErrorResponse) => this.handleError(error))
+        tap((result): void => {
+          console.log('Mapped response:', result);
+          this.loadingSubject.next(false);
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error fetching videos:', error);
+          return this.handleError(error);
+        })
       );
   }
   
@@ -173,12 +210,20 @@ export class VideoService {
       uploadDate = new Date();
     }
 
+    // Keep the original duration from the backend if it's valid
+    // Only use default duration if the backend value is truly invalid
+    let duration = 30; // Default fallback
+    if (typeof video.duration === 'number') {
+      // Even very small durations might be valid (like 1 second videos)
+      duration = video.duration > 0 ? video.duration : 30;
+    }
+
     return {
       ...video,
       uploadDate: uploadDate,
       thumbnailUrl: this.ensureFullUrl(video.thumbnailUrl),
       videoUrl: this.ensureFullUrl(video.videoUrl),
-      duration: video.duration || 0,
+      duration: duration,
       isVisible: video.isVisible !== undefined ? video.isVisible : true,
       commentCount: video.commentCount || 0,
       shareCount: video.shareCount || 0
@@ -517,5 +562,53 @@ export class VideoService {
     
     console.error(errorMessage);
     return throwError((): Error => new Error(errorMessage));
+  }
+
+  /**
+   * Update video duration when actual duration is detected in HTML video element
+   */
+  updateVideoDuration(videoId: string, actualDuration: number, skipRefresh: boolean = false): void {
+    // First update the video in the dataSource if it exists
+    const videos = this.videosSubject.getValue();
+    const videoIndex = videos.findIndex(v => v.id === videoId);
+    
+    if (videoIndex !== -1) {
+      // Log the update regardless of whether there's a significant difference
+      console.log(`Updating video ${videoId} duration from ${videos[videoIndex].duration} to ${actualDuration}`);
+      
+      // Create a new array with the updated video
+      const updatedVideos = [...videos];
+      updatedVideos[videoIndex] = {
+        ...updatedVideos[videoIndex],
+        duration: actualDuration
+      };
+      
+      // Update the videos subject so all components show the accurate duration
+      // Only if skipRefresh is false (to avoid loops)
+      if (!skipRefresh) {
+        this.videosSubject.next(updatedVideos);
+      }
+      
+      // Update the duration in the backend with metadata flag
+      this.http.patch(`${this.apiUrl}/${videoId}/duration`, {
+        duration: actualDuration,
+        isFromMetadata: true  // Flag to indicate this is from actual video metadata
+      })
+      .subscribe({
+        next: () => console.log(`Video ${videoId} duration updated in backend`),
+        error: (error) => console.error(`Error updating video duration:`, error)
+      });
+    } else {
+      console.log(`Video ${videoId} not found in videos cache`);
+    }
+    
+    // If this is the current video, update it as well
+    const currentVideo = this.currentVideoSubject.getValue();
+    if (currentVideo && currentVideo.id === videoId) {
+      this.currentVideoSubject.next({
+        ...currentVideo,
+        duration: actualDuration
+      });
+    }
   }
 }

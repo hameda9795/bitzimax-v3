@@ -168,6 +168,8 @@
                   (click)="watchVideo(video.id)">
                 <!-- 9:16 aspect ratio container -->
                 <div class="relative pb-[177.78%]">
+                  <video #previewVideo class="w-full h-full object-contain hidden" [src]="video.videoUrl" preload="metadata" 
+                         (loadedmetadata)="updateVideoDuration(video, $event)"></video>
                   <img [src]="video.thumbnailUrl" 
                       [alt]="video.title" 
                       class="absolute inset-0 w-full h-full object-cover">

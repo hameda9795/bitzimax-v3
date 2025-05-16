@@ -154,14 +154,18 @@
 
 // Video info overlay
 .video-info-overlay {
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.7) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
+  
+  .text-neon-green {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-shadow: 0 0 2px #000;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
 }
 
 .video-card:hover .video-info-overlay {

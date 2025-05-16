@@ -154,8 +154,11 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Set up event listeners
         video.addEventListener('loadedmetadata', () => {
-          this.duration = video.duration;
-          console.log('Video metadata loaded, duration:', this.duration);
+          this.updateVideoDuration(video);
+        });
+
+        video.addEventListener('durationchange', () => {
+          this.updateVideoDuration(video);
         });
 
         video.addEventListener('timeupdate', () => {
@@ -177,9 +180,40 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
         
         // Ensure the video is properly loaded
         if (video.readyState >= 1) {
-          this.duration = video.duration;
+          this.updateVideoDuration(video);
         }
       }
+    }
+  }
+
+  /**
+   * Helper method to update duration from video element
+   */
+  private updateVideoDuration(videoElement: HTMLVideoElement): void {
+    if (videoElement.duration && !isNaN(videoElement.duration) && videoElement.duration > 0) {
+      // Always use the video element's duration when available
+      this.duration = videoElement.duration;
+      
+      // Update the model as well to keep them in sync
+      if (this.video) {
+        // Update the video model so this accurate duration can be saved
+        const previousDuration = this.video.duration;
+        this.video.duration = videoElement.duration;
+        
+        // Always update the duration in the backend when we have an actual value from the video element
+        // This ensures we always have the accurate duration even after page refresh
+        console.log('Updating video duration in backend:', 
+          {videoId: this.video.id, stored: previousDuration, actual: videoElement.duration});
+        
+        // Call the video service to update the duration everywhere, allowing refresh since this is the main video
+        this.videoService.updateVideoDuration(this.video.id, videoElement.duration, false);
+      }
+      
+      console.log('Updated video duration:', this.duration);
+    } else if (this.video && this.video.duration > 0) {
+      // Fallback to model duration
+      this.duration = this.video.duration;
+      console.log('Using model duration:', this.duration);
     }
   }
 
@@ -243,12 +277,20 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   formatDuration(seconds: number): string {
-    if (!seconds || isNaN(seconds)) {
+    if (!seconds || isNaN(seconds) || seconds <= 0) {
       return '0:00';
     }
-    const mins = Math.floor(seconds / 60);
+    
+    // Format durations properly, accounting for hours if needed
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    } else {
+      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
   }
 
   openShareModal(): void {

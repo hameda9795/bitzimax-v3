@@ -368,4 +368,68 @@ public class VideoController {    private static final Logger logger = LoggerFac
         
         return ResponseEntity.ok(relatedVideos);
     }
+
+    /**
+     * Update video duration
+     * PATCH /api/videos/{id}/duration
+     * 
+     * @param id the video ID
+     * @param durationData the new duration in seconds
+     * @return success status
+     */
+    @PatchMapping("/{id}/duration")
+    public ResponseEntity<?> updateVideoDuration(
+            @PathVariable Long id,
+            @RequestBody DurationUpdateRequest durationData) {
+        logger.info("Updating video duration: id={}, duration={}, isFromMetadata={}", 
+                id, durationData.getDuration(), durationData.getIsFromMetadata());
+
+        Optional<Video> videoOpt = videoService.findVideoById(id);
+        if (videoOpt.isPresent()) {
+            Video video = videoOpt.get();
+            
+            // Log previous duration for debugging
+            logger.info("Previous duration for video {}: {}", id, video.getDuration());
+            
+            // Update the duration
+            video.setDuration(durationData.getDuration());
+            
+            // If this duration comes from metadata, mark it as verified in some way
+            // You might want to add a new field to the Video entity for this purpose
+            if (durationData.getIsFromMetadata() != null && durationData.getIsFromMetadata()) {
+                logger.info("Duration for video {} verified from actual metadata", id);
+                // If you had a field like "isDurationVerified", you would set it here
+            }
+            
+            videoService.saveVideo(video);
+            return ResponseEntity.ok().build();
+        } else {
+            logger.warn("Video not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
+        }
+    }
+
+    /**
+     * Simple DTO for duration update requests
+     */
+    static class DurationUpdateRequest {
+        private Integer duration;
+        private Boolean isFromMetadata;
+
+        public Integer getDuration() {
+            return duration;
+        }
+
+        public void setDuration(Integer duration) {
+            this.duration = duration;
+        }
+        
+        public Boolean getIsFromMetadata() {
+            return isFromMetadata;
+        }
+        
+        public void setIsFromMetadata(Boolean isFromMetadata) {
+            this.isFromMetadata = isFromMetadata;
+        }
+    }
 }

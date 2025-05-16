@@ -208,6 +208,65 @@ $grid-line: rgba(0, 243, 255, 0.5);
           margin-right: 0.5rem;
         }
       }
+
+      .error-text {
+        color: #ff4040;
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
+
+      .browser-warning {
+        color: #ffcc00;
+        display: flex;
+        align-items: center;
+        margin-top: 0.75rem;
+        padding: 0.5rem;
+        background: rgba(255, 204, 0, 0.1);
+        border-radius: 4px;
+        
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
+
+      .optimization-panel {
+        background: rgba(255, 0, 255, 0.1);
+        border-left: 3px solid $neon-pink;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 4px 4px 0;
+
+        h3 {
+          margin-top: 0;
+          margin-bottom: 0.5rem;
+          font-size: 1.2rem;
+        }
+
+        p {
+          margin: 0.5rem 0;
+        }
+
+        .webm-convert-btn {
+          margin-top: 1rem;
+          background-color: rgba(255, 0, 255, 0.3);
+          color: white;
+          border: 1px solid $neon-pink;
+          
+          &:hover {
+            background-color: rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
+          }
+          
+          mat-icon {
+            color: white;
+          }
+        }
+      }
     }
   }
 }
@@ -472,4 +531,31 @@ $grid-line: rgba(0, 243, 255, 0.5);
   .cyberpunk-header h1 {
     font-size: 2rem;
   }
+}
+
+.progress-container {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 243, 255, 0.1);
+  border-radius: 4px;
+
+  p {
+    text-align: center;
+  }
+}
+
+.conversion-error {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 64, 64, 0.1);
+  border-left: 3px solid #ff4040;
+  border-radius: 0 4px 4px 0;
+}
+
+.conversion-success {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(0, 255, 127, 0.1);
+  border-left: 3px solid #00ff7f;
+  border-radius: 0 4px 4px 0;
 }

@@ -25,7 +25,7 @@
                     accept="video/*" 
                     (change)="onVideoSelected($event)" 
                     class="hidden-input">
-              <p class="hint-text">MP4, MOV, AVI, etc. (Max 500MB)</p>
+              <p class="hint-text">Support for all video formats (MP4, MOV, AVI, etc.)</p>
             </div>
             
             <div class="file-info" *ngIf="videoFile">
@@ -36,23 +36,48 @@
               
               <div class="file-details">
                 <p>Original Size: {{ formatFileSize(originalFileSize) }}</p>
-                <p>Format: {{ videoFile.type }}</p>
+                <p>Format: {{ videoFile.type || 'Unknown' }}</p>
                 
-                <div class="conversion-info" *ngIf="!isConverting && !conversionComplete">
-                  <p class="highlight-text">Estimated WebM Size: {{ formatFileSize(convertedFileSize) }}</p>
-                  <p class="highlight-text">Potential Reduction: {{ getSizeReductionPercentage() }}%</p>
-                  <button type="button" mat-raised-button color="accent" 
-                          class="cyberpunk-button" 
-                          (click)="convertVideoToWebM()">
-                    <mat-icon>transform</mat-icon>
-                    Convert to WebM
-                  </button>
+                <div class="conversion-info" *ngIf="!isConverting && !conversionComplete && videoFile.type !== 'video/webm'">
+                  <div class="optimization-panel">
+                    <h3 class="highlight-text">Optimize Your Video</h3>
+                    <p>Converting to WebM format can significantly reduce file size while maintaining quality.</p>
+                    <p class="highlight-text">Estimated WebM Size: {{ formatFileSize(convertedFileSize) }}</p>
+                    <p class="highlight-text">Potential Reduction: {{ getSizeReductionPercentage() }}%</p>
+                    <button type="button" mat-raised-button color="accent" 
+                            class="cyberpunk-button webm-convert-btn" 
+                            (click)="convertVideoToWebM()"
+                            [disabled]="!isWebMSupported">
+                      <mat-icon>transform</mat-icon>
+                      Convert to WebM
+                    </button>
+                    <p class="browser-warning" *ngIf="!isWebMSupported">
+                      <mat-icon color="warn">warning</mat-icon>
+                      WebM conversion is not supported in your browser. Try Chrome or Firefox.
+                    </p>
+                  </div>
+                </div>
+                
+                <div class="conversion-info" *ngIf="!isConverting && !conversionComplete && videoFile.type === 'video/webm'">
+                  <div class="optimization-panel">
+                    <h3 class="highlight-text">Your video is already in WebM format</h3>
+                    <p>This is the optimal format for upload!</p>
+                  </div>
                 </div>
                 
                 <div class="progress-container" *ngIf="isConverting">
                   <p class="highlight-text blink-text">CONVERTING...</p>
                   <mat-progress-bar mode="determinate" [value]="conversionProgress" color="accent"></mat-progress-bar>
                   <p>{{ conversionProgress }}%</p>
+                </div>
+                
+                <div class="conversion-error" *ngIf="uploadError">
+                  <p class="error-text">
+                    <mat-icon color="warn">error</mat-icon>
+                    Conversion Failed
+                  </p>
+                  <p>{{ uploadError }}</p>
+                  <p>Try with a different video or upload the original format.</p>
                 </div>
                 
                 <div class="conversion-success" *ngIf="conversionComplete">
@@ -66,7 +91,7 @@
                 
                 <button type="button" mat-stroked-button 
                         class="cyberpunk-button-outline" 
-                        (click)="videoFile = null; convertedFile = null; conversionComplete = false;">
+                        (click)="videoFile = null; convertedFile = null; conversionComplete = false; uploadError = null;">
                   Change Video
                 </button>
               </div>

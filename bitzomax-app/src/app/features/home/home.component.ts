@@ -7,6 +7,7 @@ import { Video } from '../../shared/models/video.model';
 import { Genre } from '../../shared/models/genre.model';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { SubscriptionService } from '../../core/services/subscription.service';
 
 interface GenreSidebar {
   genre: Genre;
@@ -26,52 +27,37 @@ export class HomeComponent implements OnInit {
   popularVideos: Video[] = [];
   genreSidebar: GenreSidebar[] = [];
   baseUrl = 'http://localhost:8080';
+  allVideos: Video[] = [];
+  loadingVideos = true;
+  isSubscribed = false;
   
   constructor(
     private videoService: VideoService,
     private userService: UserService,
     private genreService: GenreService,
-    private router: Router
+    private router: Router,
+    private subscriptionService: SubscriptionService
   ) { }
 
   ngOnInit(): void {
-    // Subscribe to the video stream
+    // Subscribe to the videos observable to get all videos
     this.videoService.videos$.subscribe(videos => {
-      if (!videos || videos.length === 0) {
-        console.warn('No videos found from the backend');
-        return;
-      }
-      
-      console.log('Loaded videos:', videos);
-      
-      // Filter out non-visible videos first
-      videos = videos.filter(video => video.isVisible);
-      
-      // Process videos - ensure URLs start with http://localhost:8080
-      videos = videos.map(video => ({
-        ...video,
-        thumbnailUrl: this.ensureFullUrl(video.thumbnailUrl),
-        videoUrl: this.ensureFullUrl(video.videoUrl)
-      }));
-      
-      // Get 3 featured videos (premium videos with most views)
-      this.featuredVideos = [...videos]
-        .filter(video => video.isPremium)
-        .sort((a, b) => b.views - a.views)
-        .slice(0, 3);
-        
-      // Get recent videos (sorted by upload date)
-      this.recentVideos = [...videos]
-        .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
-        .slice(0, 6);
-        
-      // Get popular videos (sorted by likes)
-      this.popularVideos = [...videos]
-        .sort((a, b) => b.likes - a.likes)
-        .slice(0, 6);
-        
-      // Generate sidebar content with videos grouped by genre
-      this.generateSidebarContent(videos);
+      this.allVideos = videos;
+      this.filterVideos();
+      this.loadingVideos = false;
+    });
+    
+    // Load featured playlists
+    this.loadFeaturedPlaylists();
+    
+    // Load genres
+    this.loadGenres();
+    
+    // Check subscription status
+    this.subscriptionService.subscriptionStatus$.subscribe(isSubscribed => {
+      this.isSubscribed = isSubscribed;
+      // Refresh video filters when subscription status changes
+      this.filterVideos();
     });
   }
   
@@ -173,8 +159,86 @@ export class HomeComponent implements OnInit {
    * Format video duration from seconds to MM:SS format
    */
   formatDuration(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
+    if (!seconds || isNaN(seconds) || seconds <= 0) {
+      return '0:00';
+    }
+    
+    // Format durations properly, accounting for hours if needed
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    } else {
+      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+  }
+
+  private filterVideos(): void {
+    // Filter out non-visible videos first
+    this.allVideos = this.allVideos.filter(video => video.isVisible);
+    
+    // Process videos - ensure URLs start with http://localhost:8080
+    this.allVideos = this.allVideos.map(video => ({
+      ...video,
+      thumbnailUrl: this.ensureFullUrl(video.thumbnailUrl),
+      videoUrl: this.ensureFullUrl(video.videoUrl)
+    }));
+    
+    // Get 3 featured videos (premium videos with most views)
+    this.featuredVideos = [...this.allVideos]
+      .filter(video => video.isPremium)
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 3);
+      
+    // Get recent videos (sorted by upload date)
+    this.recentVideos = [...this.allVideos]
+      .sort((a, b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())
+      .slice(0, 6);
+      
+    // Get popular videos (sorted by likes)
+    this.popularVideos = [...this.allVideos]
+      .sort((a, b) => b.likes - a.likes)
+      .slice(0, 6);
+      
+    // Generate sidebar content with videos grouped by genre
+    this.generateSidebarContent(this.allVideos);
+  }
+
+  private loadFeaturedPlaylists(): void {
+    // In a real implementation, you would load playlists from a service
+    console.log('Loading featured playlists...');
+    // this.playlistService.getFeaturedPlaylists().subscribe(...);
+  }
+
+  private loadGenres(): void {
+    // Load genres from the genre service
+    this.genreService.getAllGenres().subscribe(genres => {
+      console.log('Loaded genres:', genres);
+      // Any additional genre-related logic would go here
+    });
+  }
+
+  /**
+   * Update video duration when metadata loads
+   */
+  updateVideoDuration(video: Video, event: Event): void {
+    const videoElement = event.target as HTMLVideoElement;
+    if (videoElement && videoElement.duration && !isNaN(videoElement.duration)) {
+      const actualDuration = videoElement.duration;
+      
+      // Only update if there's a significant difference
+      if (Math.abs(video.duration - actualDuration) > 1) {
+        console.log(`Updating video ${video.id} duration from ${video.duration} to ${actualDuration}`);
+        
+        // Update the model
+        video.duration = actualDuration;
+        
+        // Update in the service to persist to backend
+        // Use skipRefresh=true to avoid unneeded refreshes
+        this.videoService.updateVideoDuration(video.id, actualDuration, true);
+      }
+    }
   }
 }

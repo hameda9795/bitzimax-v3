@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -82,31 +83,67 @@ public class FileStorageService {
      * @return Duration in seconds
      */
     private int extractVideoDuration(String filePath) throws IOException {
-        String[] cmd = {
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            filePath
-        };
-        
-        Process process = Runtime.getRuntime().exec(cmd);
-        
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String durationStr = reader.readLine();
-            if (durationStr != null && !durationStr.isEmpty()) {
-                // Convert duration string to seconds (rounded to nearest integer)
-                return (int) Math.round(Double.parseDouble(durationStr));
+        // First try with FFprobe
+        try {
+            String[] cmd = {
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                filePath
+            };
+            
+            Process process = Runtime.getRuntime().exec(cmd);
+            
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String durationStr = reader.readLine();
+                if (durationStr != null && !durationStr.isEmpty()) {
+                    try {
+                        // Convert duration string to seconds (rounded to nearest integer)
+                        double durationDouble = Double.parseDouble(durationStr);
+                        logger.info("Successfully extracted duration with FFprobe: {} seconds", durationDouble);
+                        return (int) Math.round(durationDouble);
+                    } catch (NumberFormatException e) {
+                        logger.warn("Failed to parse duration string: {}", durationStr);
+                        // Continue to fallback method
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Error extracting video duration with FFprobe: {}", e.getMessage());
+                // Continue to fallback method
             }
         } catch (Exception e) {
-            logger.error("Error extracting video duration: {}", e.getMessage());
-            throw new IOException("Failed to extract video duration", e);
+            logger.warn("FFprobe execution failed, falling back to default duration: {}", e.getMessage());
+            // Continue to fallback method
         }
         
-        return 0; // Return 0 if duration couldn't be extracted
+        // If FFprobe fails, try to estimate duration based on file size and bitrate
+        try {
+            File file = new File(filePath);
+            long fileSize = file.length(); // in bytes
+            
+            // Use a more conservative bitrate estimate to prevent underestimating durations
+            // 500 kbps is reasonable for most web videos
+            long assumedBitrate = 500 * 1024; // 500 kbps converted to bits per second
+            
+            // Calculate duration: fileSize (in bits) / bitrate (bits per second) = duration (seconds)
+            // 8 bits per byte
+            int estimatedDuration = (int)((fileSize * 8) / assumedBitrate);
+            
+            logger.info("Estimated duration from file size: {} seconds for {} bytes", estimatedDuration, fileSize);
+            
+            // Always return at least 1 second for any valid video file
+            return Math.max(estimatedDuration, 1);
+        } catch (Exception e) {
+            logger.error("Error estimating video duration from file size: {}", e.getMessage());
+        }
+        
+        // If all else fails, return a reasonable default
+        logger.warn("Falling back to default duration for file: {}", filePath);
+        return 60; // Use a value that will make it clear it's a fallback (1 minute)
     }
 
     /**

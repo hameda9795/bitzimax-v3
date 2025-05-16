@@ -62,6 +62,7 @@ export class VideoUploadComponent implements OnInit {
   editingVideoId: string | null = null;
   uploadError: string | null = null;
   genres: Genre[] = [];
+  isWebMSupported = true;
 
   constructor(
     private fb: FormBuilder,
@@ -81,6 +82,9 @@ export class VideoUploadComponent implements OnInit {
       isPremium: [false],
       genreId: [null]
     });
+
+    // Check if WebM conversion is supported by the browser
+    this.isWebMSupported = this.videoConversionService.isWebMConversionSupported();
   }
 
   ngOnInit(): void {
@@ -121,7 +125,9 @@ export class VideoUploadComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading video data:', error);
-        alert('Failed to load video data. Please try again.');
+        this.snackBar.open('Failed to load video data. Please try again.', 'Close', {
+          duration: 5000
+        });
         this.router.navigate(['/admin/videos']);
       }
     });
@@ -131,9 +137,28 @@ export class VideoUploadComponent implements OnInit {
   onVideoSelected(event: any) {
     if (event.target.files && event.target.files.length) {
       this.videoFile = event.target.files[0];
+      
+      // Reset conversion state when a new file is selected
+      this.convertedFile = null;
+      this.conversionComplete = false;
+      
       if (this.videoFile) {
         this.originalFileSize = this.videoFile.size;
         this.convertedFileSize = this.videoConversionService.getEstimatedWebMSize(this.originalFileSize);
+        
+        // Show a warning for very large files
+        if (this.originalFileSize > 500 * 1024 * 1024) { // 500MB
+          this.snackBar.open('Large file detected. Converting to WebM is recommended to reduce file size.', 'OK', {
+            duration: 6000
+          });
+        }
+
+        // Show warning if WebM conversion is not supported
+        if (!this.isWebMSupported) {
+          this.snackBar.open('WebM conversion is not supported in your browser. Try using Chrome or Firefox for this feature.', 'OK', {
+            duration: 8000
+          });
+        }
       }
     }
   }
@@ -160,32 +185,43 @@ export class VideoUploadComponent implements OnInit {
     
     this.isConverting = true;
     this.conversionProgress = 0;
+    this.uploadError = null;
     
     // Simulate progress (in a real app, you'd get actual progress from the conversion)
     const progressInterval = setInterval(() => {
-      this.conversionProgress += 10;
-      if (this.conversionProgress >= 100) {
-        clearInterval(progressInterval);
+      if (this.conversionProgress < 95) {  // Cap at 95% until actually complete
+        this.conversionProgress += 5;
       }
     }, 300);
     
     this.videoConversionService.convertToWebM(this.videoFile)
       .pipe(
         finalize(() => {
-          this.isConverting = false;
-          this.conversionProgress = 100;
-          this.conversionComplete = true;
           clearInterval(progressInterval);
+          this.isConverting = false;
+          // Only set to 100% if successful - error handler will stop progress
+          if (!this.uploadError) {
+            this.conversionProgress = 100;
+          }
         })
       )
       .subscribe({
         next: (convertedFile) => {
           this.convertedFile = convertedFile;
           this.convertedFileSize = convertedFile.size;
+          this.conversionComplete = true;
+          this.snackBar.open('Video successfully converted to WebM!', 'Great!', {
+            duration: 3000
+          });
         },
         error: (error) => {
           console.error('Conversion error:', error);
-          // Handle error state
+          this.uploadError = error.message || 'An unknown error occurred during conversion';
+          this.conversionProgress = 0;
+          this.isConverting = false;
+          this.snackBar.open(this.uploadError || 'Conversion failed', 'OK', {
+            duration: 8000
+          });
         }
       });
   }
@@ -271,7 +307,9 @@ export class VideoUploadComponent implements OnInit {
             } else if (event.type === HttpEventType.Response) {
               this.isUploading = false;
               this.resetForm();
-              alert('Video uploaded successfully!');
+              this.snackBar.open('Video uploaded successfully!', 'Great!', {
+                duration: 3000
+              });
               this.videoService.refreshVideos();
               this.router.navigate(['/admin/videos']);
             }
@@ -279,7 +317,9 @@ export class VideoUploadComponent implements OnInit {
           error: (error) => {
             this.isUploading = false;
             console.error('Upload error:', error);
-            alert(`Upload failed: ${error.message}`);
+            this.snackBar.open(`Upload failed: ${error.message || 'Unknown error'}`, 'OK', {
+              duration: 5000
+            });
             uploadSubscription.unsubscribe();
           },
           complete: () => {
@@ -321,6 +361,8 @@ export class VideoUploadComponent implements OnInit {
       hashtags: this.hashtags,
       seoKeywords: this.seoKeywords,
       originalFormat: this.videoFile?.type,
+      // Include information about whether the file was converted to WebM
+      convertedToWebM: this.convertedFile !== null,
       genre: formValue.genreId ? { id: formValue.genreId } : null
     };
     

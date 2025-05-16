@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Router, RouterLink } from '@angular/router';
-import { Subject, takeUntil, Subscription } from 'rxjs';
+import { Subject, takeUntil, Subscription, BehaviorSubject, skip, finalize } from 'rxjs';
 
 import { VideoService } from '../../../core/services/video.service';
 import { Video } from '../../../shared/models/video.model';
@@ -42,8 +42,10 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
   selection = new SelectionModel<Video>(true, []);
   isLoading = true;
   totalVideos = 0;
-  selectedFilter = 'all';
+  selectedFilter: 'all' | 'premium' | 'free' = 'all';
   searchQuery = '';
+  loadingSubject = new BehaviorSubject<boolean>(false);
+  loading$ = this.loadingSubject.asObservable();
   
   // Responsive columns configuration
   displayedColumnsMobile: string[] = ['thumbnail', 'title', 'actions'];
@@ -81,22 +83,42 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   ngOnInit(): void {
-    this.loadVideos();
-    // Start observing the table container for size changes
-    const tableContainer = document.querySelector('.table-container');
-    if (tableContainer) {
-      this.resizeObserver.observe(tableContainer);
-    }
-
-    // Subscribe to video updates
+    this.loadingSubject.next(true);
+    
+    // Direct test to check API connectivity
+    console.log('Testing direct API call to check server health...');
+    fetch('http://localhost:8080/api/videos')
+      .then(response => {
+        console.log('API response status:', response.status);
+        if (response.ok) {
+          response.json().then(data => {
+            console.log('Direct API fetch successful, videos found:', data.length);
+          });
+        } else {
+          console.error('API responded with error:', response.status);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to connect to API, server may be down:', error);
+      });
+    
+    // Subscribe to video service for updates, but only refresh if 
+    // it's an explicit update, not from our own loadVideos call
     this.subscriptions.add(
-      this.videoService.videos$.subscribe(videos => {
-        this.dataSource.data = videos;
+      this.videoService.videos$.pipe(
+        // Skip the first emission which happens on subscription
+        // to avoid duplicate initial loading
+        skip(1)
+      ).subscribe(() => {
+        // Only reload if not already loading to prevent loops
+        if (!this.isLoading) {
+          this.loadVideos();
+        }
       })
     );
     
-    // Set up sorting
-    this.dataSource.sort = this.sort;
+    // Initial data load
+    this.loadVideos();
   }
   
   ngOnDestroy(): void {
@@ -116,26 +138,40 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
     }
   }
 
-  ngAfterViewInit() {
-    // Set up pagination and sorting after view initialization
-    if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
-    }
+  ngAfterViewInit(): void {
+    // Set up sorting
+    this.dataSource.sort = this.sort;
     
-    if (this.sort) {
-      this.dataSource.sort = this.sort;
-      this.subscriptions.add(
-        this.sort.sortChange.subscribe(() => {
-          if (this.paginator) {
-            this.paginator.pageIndex = 0;
-          }
-        })
-      );
+    // Set up pagination
+    this.paginator.page.subscribe(() => {
+      this.loadVideos();
+    });
+    
+    // Start observing the table container for size changes
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+      this.resizeObserver.observe(tableContainer);
     }
   }
 
   loadVideos(sortField?: string, sortDirection?: 'asc' | 'desc' | '') {
+    console.log('loadVideos called, current loading state:', this.isLoading);
+    
+    // Even if already loading, we'll force a reset after 5 seconds to prevent permanent loading
+    if (this.isLoading) {
+      setTimeout(() => {
+        if (this.isLoading) {
+          console.log('Force-resetting loading state after timeout');
+          this.isLoading = false;
+          this.loadingSubject.next(false);
+        }
+      }, 5000);
+      console.log('Already loading videos, request ignored');
+      return;
+    }
+    
     this.isLoading = true;
+    this.loadingSubject.next(true);
     
     // Create page request with current pagination, sorting and filtering
     const pageRequest: PageRequest = {
@@ -159,29 +195,50 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
       pageRequest.filterType = this.selectedFilter;
     }
     
-    // Call API with the page request
-    this.videoService.getVideos(pageRequest)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (page: PageResponse<Video>) => {
-          this.currentPageResponse = page;
-          this.dataSource.data = page.content;
-          this.totalVideos = page.totalElements;
-          this.isLoading = false;
-          
-          // Reset selection when loading new data
-          this.selection.clear();
-        },
-        error: (error) => {
-          console.error('Error loading videos:', error);
-          this.isLoading = false;
-          this.dataSource.data = [];
-          this.totalVideos = 0;
-          alert('Failed to load videos. Please try again.');
-        }
-      });
+    console.log('Loading videos with request:', pageRequest);
+    
+    // Add direct error handling to force reset loading state
+    try {
+      // Call API with the page request
+      this.videoService.getVideos(pageRequest)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            console.log('finalize called, resetting loading state');
+            this.isLoading = false;
+            this.loadingSubject.next(false);
+          })
+        )
+        .subscribe({
+          next: (page: PageResponse<Video>) => {
+            console.log('Received video response:', page);
+            this.currentPageResponse = page;
+            this.dataSource.data = page.content;
+            this.totalVideos = page.totalElements;
+            console.log('Loaded videos successfully:', page.content.length);
+            
+            // Reset selection when loading new data
+            this.selection.clear();
+          },
+          error: (error) => {
+            console.error('Error loading videos:', error);
+            this.dataSource.data = [];
+            this.totalVideos = 0;
+            alert('Failed to load videos. Please try again.');
+          }
+        });
+    } catch (e) {
+      console.error('Exception during video loading:', e);
+      this.isLoading = false;
+      this.loadingSubject.next(false);
+    }
   }
   applyFilter(event: Event) {
+    // Don't filter if we're already loading
+    if (this.isLoading) {
+      return;
+    }
+    
     const filterValue = (event.target as HTMLInputElement).value;
     this.searchQuery = filterValue.trim().toLowerCase();
     
@@ -196,7 +253,12 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   filterByType(filter: string) {
-    this.selectedFilter = filter;
+    // Don't filter if we're already loading
+    if (this.isLoading) {
+      return;
+    }
+    
+    this.selectedFilter = filter as 'all' | 'premium' | 'free';
     
     // Reset to first page when changing filter type
     this.pageIndex = 0;
@@ -325,12 +387,20 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
   }
 
   formatDuration(seconds: number): string {
-    if (!seconds || isNaN(seconds)) {
+    if (!seconds || isNaN(seconds) || seconds <= 0) {
       return '0:00';
     }
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    
+    // Format durations properly, accounting for hours if needed
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    } else {
+      return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
   }
 
   formatViews(views: number): string {
@@ -342,6 +412,84 @@ export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewIni
     }
     return views.toString();
   }
+
+  /**
+   * Update video duration when metadata is loaded
+   */
+  updateVideoDuration(video: Video, event: Event): void {
+    // Don't process if we're already in loading state
+    if (this.isLoading) {
+      return;
+    }
+    
+    const videoElement = event.target as HTMLVideoElement;
+    if (videoElement && videoElement.duration && !isNaN(videoElement.duration)) {
+      const actualDuration = videoElement.duration;
+      
+      // Only update if there's a significant difference
+      if (Math.abs(video.duration - actualDuration) > 1) {
+        console.log(`[Admin] Updating video ${video.id} duration from ${video.duration} to ${actualDuration}`);
+        
+        // Update the local model without triggering refresh
+        video.duration = actualDuration;
+        
+        // Update in the service but do NOT trigger refresh in this component
+        // We'll use a flag to indicate this is a background update
+        this.videoService.updateVideoDuration(video.id, actualDuration, true);
+      }
+    }
+  }
+
+  /**
+   * Force reset loading state and try to load videos again
+   */
+  forceResetLoading(): void {
+    console.log('Force resetting loading state via emergency button');
+    
+    // Reset all loading state flags
+    this.isLoading = false;
+    this.loadingSubject.next(false);
+    
+    // Try to load videos without filters
+    this.selectedFilter = 'all';
+    this.searchQuery = '';
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    
+    // Wait a moment then try to load again
+    setTimeout(() => {
+      console.log('Attempting to reload videos after emergency reset');
+      
+      // Try direct video loading if needed
+      this.loadAllVideosDirectly();
+    }, 1000);
+  }
+
+  /**
+   * As a last resort, try to load videos directly using the getAllVideos endpoint
+   */
+  private loadAllVideosDirectly(): void {
+    console.log('Attempting to load all videos directly as fallback');
+    
+    // Make direct call without pagination
+    this.videoService.getAllVideos().subscribe({
+      next: (videos) => {
+        console.log('Direct video loading successful, found:', videos.length);
+        // Update UI with these videos
+        this.dataSource.data = videos;
+        this.totalVideos = videos.length;
+      },
+      error: (err) => {
+        console.error('Even direct video loading failed:', err);
+        // Show empty state as fallback
+        this.dataSource.data = [];
+        this.totalVideos = 0;
+      }
+    });
+  }
+
   // Helper methods for formatting display data
   // These methods remain client-side since they're just for display
 }

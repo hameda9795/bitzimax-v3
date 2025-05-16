@@ -35,6 +35,13 @@ export class VideoConversionService {
 
         // When metadata is loaded, we can start the conversion
         video.onloadedmetadata = () => {
+          // Handle conversion errors for files with no video dimension info
+          if (!video.videoWidth || !video.videoHeight) {
+            observer.error(new Error('Unable to read video dimensions. The file might be corrupted or in an unsupported format.'));
+            URL.revokeObjectURL(fileURL);
+            return;
+          }
+
           video.width = video.videoWidth;
           video.height = video.videoHeight;
 
@@ -46,14 +53,41 @@ export class VideoConversionService {
 
           if (!ctx) {
             observer.error(new Error('Could not create canvas context'));
+            URL.revokeObjectURL(fileURL);
             return;
+          }
+
+          // Check if MediaRecorder supports WebM
+          if (!MediaRecorder.isTypeSupported('video/webm;codecs=vp9') && 
+              !MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+            observer.error(new Error('Your browser does not support WebM conversion. Try using Chrome or Firefox.'));
+            URL.revokeObjectURL(fileURL);
+            return;
+          }
+
+          // Choose the best available WebM codec
+          const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+            ? 'video/webm;codecs=vp9' 
+            : 'video/webm;codecs=vp8';
+
+          // Calculate an appropriate bitrate based on resolution
+          // Higher resolution videos need higher bitrates to maintain quality
+          let videoBitsPerSecond = 1000000; // Default 1 Mbps
+          const pixelCount = video.width * video.height;
+          
+          if (pixelCount > 2073600) { // 1080p and above (1920×1080)
+            videoBitsPerSecond = 3500000; // 3.5 Mbps
+          } else if (pixelCount > 921600) { // 720p (1280×720)
+            videoBitsPerSecond = 2500000; // 2.5 Mbps
+          } else if (pixelCount > 409920) { // 480p (854×480)
+            videoBitsPerSecond = 1500000; // 1.5 Mbps
           }
 
           // Set up MediaRecorder to capture the canvas output
           const stream = canvas.captureStream(30); // 30 fps
           const mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'video/webm;codecs=vp9', // Using VP9 codec for better compression
-            videoBitsPerSecond: 2500000 // 2.5 Mbps - can be adjusted
+            mimeType: mimeType,
+            videoBitsPerSecond: videoBitsPerSecond
           });
 
           const chunks: BlobPart[] = [];
@@ -93,20 +127,39 @@ export class VideoConversionService {
             drawVideo();
           };
 
+          // Handle play errors
+          video.onerror = () => {
+            URL.revokeObjectURL(fileURL);
+            observer.error(new Error(`Error playing video for conversion: ${video.error?.message || 'Unknown error'}`));
+            mediaRecorder.stop();
+          };
+
+          // Add a timeout in case the video is too long or processing hangs
+          const maxConversionTime = 10 * 60 * 1000; // 10 minutes max
+          const timeoutId = setTimeout(() => {
+            if (mediaRecorder.state === 'recording') {
+              mediaRecorder.stop();
+              observer.error(new Error('Conversion timeout. The video may be too long for browser-based conversion.'));
+            }
+          }, maxConversionTime);
+
           // Play the video to start the conversion process
           video.play().catch(err => {
+            clearTimeout(timeoutId);
+            URL.revokeObjectURL(fileURL);
             observer.error(new Error(`Failed to play video for conversion: ${err}`));
           });
 
           // Stop recording when the video ends
           video.onended = () => {
+            clearTimeout(timeoutId);
             mediaRecorder.stop();
           };
         };
 
         video.onerror = () => {
           URL.revokeObjectURL(fileURL);
-          observer.error(new Error('Error loading video for conversion'));
+          observer.error(new Error(`Error loading video for conversion: ${video.error?.message || 'Unknown error'}`));
         };
       } catch (err) {
         observer.error(err);
@@ -122,8 +175,31 @@ export class VideoConversionService {
    * @returns Estimated size in bytes after conversion
    */
   getEstimatedWebMSize(originalSize: number): number {
-    // WebM with VP9 typically achieves ~50-70% reduction depending on content
-    // We'll use a conservative 50% estimate
-    return Math.round(originalSize * 0.5);
+    // Improved estimation based on typical compression ratios
+    // Different compression ratios based on file size tiers
+    if (originalSize > 500 * 1024 * 1024) { // > 500MB
+      return Math.round(originalSize * 0.4); // 60% reduction for large files
+    } else if (originalSize > 100 * 1024 * 1024) { // > 100MB
+      return Math.round(originalSize * 0.45); // 55% reduction for medium-large files
+    } else if (originalSize > 20 * 1024 * 1024) { // > 20MB
+      return Math.round(originalSize * 0.5); // 50% reduction for medium files
+    } else {
+      return Math.round(originalSize * 0.6); // 40% reduction for small files
+    }
+  }
+
+  /**
+   * Checks if the browser supports WebM conversion
+   * @returns boolean indicating if conversion is supported
+   */
+  isWebMConversionSupported(): boolean {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || !window.MediaRecorder) {
+      return false;
+    }
+    
+    // Check if MediaRecorder supports WebM
+    return MediaRecorder.isTypeSupported('video/webm;codecs=vp9') || 
+           MediaRecorder.isTypeSupported('video/webm;codecs=vp8');
   }
 }

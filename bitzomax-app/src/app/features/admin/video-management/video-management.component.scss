@@ -454,25 +454,30 @@ $grid-line: rgba(0, 243, 255, 0.5);
 
 // Video thumbnail in table
 .video-thumbnail {
-  width: 100px;
   position: relative;
+  width: 120px;
+  height: 67.5px; // 16:9 aspect ratio
+  overflow: hidden;
   
   img {
     width: 100%;
-    height: auto;
-    border-radius: 3px;
-    display: block;
+    height: 100%;
+    object-fit: cover;
   }
   
   .video-duration {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
+    bottom: 4px;
+    right: 4px;
     background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 4px;
+    color: #00f3ff; // electric-blue
+    font-size: 0.75rem;
+    padding: 2px 6px;
     border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    z-index: 10;
+    text-shadow: 0 0 2px #000;
   }
 }
 
