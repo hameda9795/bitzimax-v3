@@ -2,15 +2,23 @@ package com.bitzomax.mapper;
 
 import com.bitzomax.dto.VideoDTO;
 import com.bitzomax.model.Video;
+import com.bitzomax.model.Genre;
+import com.bitzomax.dto.GenreDTO;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Mapper for converting between Video entity and VideoDTO
  */
 @Component
 public class VideoMapper {
+
+    private final GenreMapper genreMapper;
+
+    @Autowired
+    public VideoMapper(GenreMapper genreMapper) {
+        this.genreMapper = genreMapper;
+    }
 
     /**
      * Convert Video entity to VideoDTO
@@ -27,12 +35,7 @@ public class VideoMapper {
         dto.setThumbnailUrl(video.getThumbnailUrl());
         dto.setDescription(video.getDescription());
         dto.setDuration(video.getDuration());
-        // Ensure we have a valid upload date
-        if (video.getUploadDate() != null) {
-            dto.setUploadDate(video.getUploadDate());
-        } else {
-            dto.setUploadDate(LocalDateTime.now());
-        }
+        dto.setUploadDate(video.getUploadDate());
         dto.setViews(video.getViews());
         dto.setLikes(video.getLikes());
         dto.setCommentCount(video.getCommentCount());
@@ -48,6 +51,11 @@ public class VideoMapper {
         dto.setSeoKeywords(video.getSeoKeywords());
         dto.setConversionStatus(video.getConversionStatus());
         dto.setIsVisible(video.getIsVisible());
+        
+        // Map genre if available
+        if (video.getGenre() != null) {
+            dto.setGenre(genreMapper.toDTO(video.getGenre()));
+        }
         
         return dto;
     }
@@ -84,6 +92,13 @@ public class VideoMapper {
         video.setConversionStatus(dto.getConversionStatus());
         video.setIsVisible(dto.getIsVisible());
         
+        // Handle genre conversion if present
+        if (dto.getGenre() != null) {
+            Genre genre = new Genre();
+            genre.setId(dto.getGenre().getId());
+            video.setGenre(genre);
+        }
+        
         return video;
     }
     
@@ -117,5 +132,12 @@ public class VideoMapper {
         if (dto.getSeoKeywords() != null) video.setSeoKeywords(dto.getSeoKeywords());
         if (dto.getConversionStatus() != null) video.setConversionStatus(dto.getConversionStatus());
         if (dto.getIsVisible() != null) video.setIsVisible(dto.getIsVisible());
+        
+        // Handle genre update if present
+        if (dto.getGenre() != null) {
+            Genre genre = new Genre();
+            genre.setId(dto.getGenre().getId());
+            video.setGenre(genre);
+        }
     }
 }

@@ -199,3 +199,71 @@
     background-position: -200% 0;
   }
 }
+
+/* Sidebar styling */
+.genre-sidebar-section {
+  .genre-sidebar-header {
+    position: relative;
+    
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 40%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--hot-pink), transparent);
+    }
+    
+    h3 {
+      text-shadow: 0 0 10px rgba(var(--electric-blue-rgb), 0.5);
+    }
+  }
+  
+  .sidebar-video-card {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    
+    &:hover {
+      transform: translateY(-5px);
+      border-color: var(--hot-pink);
+      box-shadow: 0 8px 25px rgba(var(--hot-pink-rgb), 0.3);
+    }
+  }
+}
+
+.sidebar-promo {
+  position: relative;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    animation: shine 3s infinite linear;
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(25deg);
+  }
+}
+
+/* Ensure 9:16 aspect ratio for sidebar videos */
+.sidebar-video-card {
+  aspect-ratio: 9/16;
+}

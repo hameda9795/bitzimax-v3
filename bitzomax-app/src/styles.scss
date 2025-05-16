@@ -5,8 +5,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for the Cyberpunk Theme */
+:root {
+  --cyber-black: #0a0014;
+  --cyber-dark: #131a2f;
+  --cyber-dark-rgb: 19, 26, 47;
+  --cyber-white: #ffffff;
+  
+  --hot-pink: #ff3c9e;
+  --hot-pink-rgb: 255, 60, 158;
+  
+  --electric-blue: #00f3ff;
+  --electric-blue-rgb: 0, 243, 255;
+  
+  --neon-green: #39ff14;
+  --neon-green-rgb: 57, 255, 20;
+  
+  --neon-yellow: #ffff00;
+  --neon-yellow-rgb: 255, 255, 0;
+  
+  --neon-red: #ff0055;
+  --neon-red-rgb: 255, 0, 85;
+}
+
 html, body {
-  background-color: #0a0014;
+  background-color: var(--cyber-black);
   color: white;
   font-family: 'Share Tech Mono', monospace;
   margin: 0;
@@ -41,6 +64,13 @@ html, body {
   .video-container {
     @apply relative overflow-hidden;
     aspect-ratio: 9/16; /* Default aspect ratio, can be overridden in component styles */
+  }
+  
+  /* Dialog styles */
+  .cyberpunk-dialog-container .mat-mdc-dialog-container {
+    --mdc-dialog-container-color: var(--cyber-black);
+    border: 1px solid var(--electric-blue);
+    box-shadow: 0 0 20px rgba(var(--electric-blue-rgb), 0.3);
   }
 }
 

@@ -6,6 +6,7 @@ public class FileUploadResponse {
     private String fileType;
     private String filePath;
     private long size;
+    private int duration;
     
     public FileUploadResponse() {
     }
@@ -15,6 +16,7 @@ public class FileUploadResponse {
         this.fileType = fileType;
         this.filePath = filePath;
         this.size = size;
+        this.duration = 0;
     }
 
     public String getFileName() {
@@ -47,5 +49,13 @@ public class FileUploadResponse {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Router, RouterLink } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Subscription } from 'rxjs';
 
 import { VideoService } from '../../../core/services/video.service';
 import { Video } from '../../../shared/models/video.model';
@@ -33,7 +33,7 @@ import { PageRequest, PageResponse } from '../../../shared/models/pagination.mod
     RouterLink
   ]
 })
-export class VideoManagementComponent implements OnInit, OnDestroy {
+export class VideoManagementComponent implements OnInit, OnDestroy, AfterViewInit {
   displayedColumns: string[] = [
     'select', 'thumbnail', 'title', 'uploadDate', 'views', 
     'likes', 'premium', 'actions'
@@ -65,6 +65,8 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
+  private subscriptions = new Subscription();
+
   constructor(
     private videoService: VideoService,
     private dialog: MatDialog,
@@ -85,12 +87,23 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
     if (tableContainer) {
       this.resizeObserver.observe(tableContainer);
     }
+
+    // Subscribe to video updates
+    this.subscriptions.add(
+      this.videoService.videos$.subscribe(videos => {
+        this.dataSource.data = videos;
+      })
+    );
+    
+    // Set up sorting
+    this.dataSource.sort = this.sort;
   }
   
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.resizeObserver.disconnect();
+    this.subscriptions.unsubscribe();
   }
 
   private adjustColumnsByScreenSize(width: number): void {
@@ -104,26 +117,21 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    // Subscribe to paginator page changes
-    this.paginator.page
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((pageEvent: PageEvent) => {
-        this.pageIndex = pageEvent.pageIndex;
-        this.pageSize = pageEvent.pageSize;
-        this.loadVideos();
-      });
-      
-    // Subscribe to sort changes
-    this.sort.sortChange
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((sort: Sort) => {
-        // Reset to first page when sorting changes
-        this.pageIndex = 0;
-        if (this.paginator) {
-          this.paginator.pageIndex = 0;
-        }
-        this.loadVideos(sort.active, sort.direction);
-      });
+    // Set up pagination and sorting after view initialization
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+    }
+    
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+      this.subscriptions.add(
+        this.sort.sortChange.subscribe(() => {
+          if (this.paginator) {
+            this.paginator.pageIndex = 0;
+          }
+        })
+      );
+    }
   }
 
   loadVideos(sortField?: string, sortDirection?: 'asc' | 'desc' | '') {

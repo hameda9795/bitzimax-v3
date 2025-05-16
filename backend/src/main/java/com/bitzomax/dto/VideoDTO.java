@@ -33,6 +33,7 @@ public class VideoDTO {
     private Set<String> seoKeywords = new HashSet<>();
     private ConversionStatus conversionStatus;
     private Boolean isVisible;
+    private GenreDTO genre;
 
     // Constructors
     public VideoDTO() {
@@ -222,6 +223,14 @@ public class VideoDTO {
         this.isVisible = isVisible;
     }
 
+    public GenreDTO getGenre() {
+        return genre;
+    }
+
+    public void setGenre(GenreDTO genre) {
+        this.genre = genre;
+    }
+
     /**
      * Convert a Video entity to VideoDTO
      *
@@ -248,7 +257,20 @@ public class VideoDTO {
         dto.setSeoKeywords(video.getSeoKeywords());
         dto.setOriginalFormat(video.getOriginalFormat());
         dto.setConversionStatus(video.getConversionStatus());
+        dto.setCommentCount(video.getCommentCount());
+        dto.setShareCount(video.getShareCount());
+        dto.setEngagementRate(video.getEngagementRate());
         dto.setIsVisible(video.getIsVisible());
+        
+        // Add genre information if available
+        if (video.getGenre() != null) {
+            GenreDTO genreDTO = new GenreDTO();
+            genreDTO.setId(video.getGenre().getId());
+            genreDTO.setName(video.getGenre().getName());
+            genreDTO.setDescription(video.getGenre().getDescription());
+            dto.setGenre(genreDTO);
+        }
+        
         return dto;
     }
 

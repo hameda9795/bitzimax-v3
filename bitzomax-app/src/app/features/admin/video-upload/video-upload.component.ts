@@ -15,6 +15,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
+import { GenreService } from '../../../core/services/genre.service';
+import { Genre } from '../../../shared/models/genre.model';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCardModule } from '@angular/material/card';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-video-upload',
@@ -30,7 +36,10 @@ import { ActivatedRoute, Router } from '@angular/router';
     MatChipsModule,
     MatButtonModule,
     MatProgressBarModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatCardModule,
+    MatSnackBarModule,
+    MatSelectModule
   ]
 })
 export class VideoUploadComponent implements OnInit {
@@ -52,22 +61,25 @@ export class VideoUploadComponent implements OnInit {
   isEditing = false;
   editingVideoId: string | null = null;
   uploadError: string | null = null;
-  
+  genres: Genre[] = [];
+
   constructor(
     private fb: FormBuilder,
     private videoConversionService: VideoConversionService,
     private videoService: VideoService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar,
+    private genreService: GenreService
   ) {
     this.uploadForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required, Validators.minLength(10)]],
-      isPremium: [false],
-      tags: [''],
+      title: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required, Validators.minLength(20)]],
+      poemText: [''],
       seoTitle: [''],
       seoDescription: [''],
-      seoKeywords: ['']
+      isPremium: [false],
+      genreId: [null]
     });
   }
 
@@ -81,6 +93,11 @@ export class VideoUploadComponent implements OnInit {
         this.loadVideoData(videoId);
       }
     });
+
+    // Load genres
+    this.genreService.genres$.subscribe(genres => {
+      this.genres = genres;
+    });
   }
 
   private loadVideoData(videoId: string): void {
@@ -91,11 +108,9 @@ export class VideoUploadComponent implements OnInit {
           this.uploadForm.patchValue({
             title: video.title,
             description: video.description,
+            poemText: video.poemText || '',
             isPremium: video.isPremium,
-            tags: video.tags ? video.tags.join(', ') : '',
-            seoTitle: video.seoTitle || '',
-            seoDescription: video.seoDescription || '',
-            seoKeywords: video.seoKeywords ? video.seoKeywords.join(', ') : ''
+            genreId: video.genre ? video.genre.id : null
           });
 
           // Set thumbnail preview if exists
@@ -223,6 +238,7 @@ export class VideoUploadComponent implements OnInit {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
+
   // Submit the form to upload the video
   onSubmit() {
     if (this.uploadForm.valid && (this.videoFile || this.convertedFile) && this.thumbnailFile) {
@@ -235,6 +251,7 @@ export class VideoUploadComponent implements OnInit {
         hashtags: this.hashtags,
         seoKeywords: this.seoKeywords,
         originalFormat: this.videoFile?.type,
+        genre: this.uploadForm.value.genreId ? { id: this.uploadForm.value.genreId } : null
       };
       
       if (!fileToUpload) {
@@ -245,37 +262,27 @@ export class VideoUploadComponent implements OnInit {
       this.isUploading = true;
       this.uploadProgress = 0;
       
-      // Subscribe to the upload progress
-      const uploadSubscription = this.videoService.uploadProgress$.subscribe(
-        (progressInfo) => {
-          this.uploadProgress = progressInfo.progress;
-          
-          if (progressInfo.status === 'complete') {
-            this.isUploading = false;
-            
-            // Reset the form
-            this.resetForm();
-            
-            // Show success message
-            alert('Video uploaded successfully!');
-            
-            // Unsubscribe from progress updates
-            uploadSubscription.unsubscribe();
-          } else if (progressInfo.status === 'error') {
-            this.isUploading = false;
-            alert(`Upload failed: ${progressInfo.message}`);
-            uploadSubscription.unsubscribe();
-          }
-        }
-      );
-      
       // Call the video service to upload
-      this.videoService.uploadVideo(fileToUpload, this.thumbnailFile, videoData)
+      const uploadSubscription = this.videoService.uploadVideo(fileToUpload, this.thumbnailFile, videoData)
         .subscribe({
+          next: (event: HttpEvent<any>) => {
+            if (event.type === HttpEventType.UploadProgress && event.total) {
+              this.uploadProgress = Math.round(100 * event.loaded / event.total);
+            } else if (event.type === HttpEventType.Response) {
+              this.isUploading = false;
+              this.resetForm();
+              alert('Video uploaded successfully!');
+              this.videoService.refreshVideos();
+              this.router.navigate(['/admin/videos']);
+            }
+          },
           error: (error) => {
             this.isUploading = false;
             console.error('Upload error:', error);
             alert(`Upload failed: ${error.message}`);
+            uploadSubscription.unsubscribe();
+          },
+          complete: () => {
             uploadSubscription.unsubscribe();
           }
         });
@@ -298,5 +305,25 @@ export class VideoUploadComponent implements OnInit {
     this.conversionComplete = false;
     this.originalFileSize = 0;
     this.convertedFileSize = 0;
+  }
+
+  prepareVideoData(): any {
+    const formValue = this.uploadForm.value;
+    
+    // Create video data object
+    const videoData = {
+      title: formValue.title,
+      description: formValue.description,
+      poemText: formValue.poemText,
+      seoTitle: formValue.seoTitle || formValue.title,
+      seoDescription: formValue.seoDescription || formValue.description,
+      isPremium: formValue.isPremium,
+      hashtags: this.hashtags,
+      seoKeywords: this.seoKeywords,
+      originalFormat: this.videoFile?.type,
+      genre: formValue.genreId ? { id: formValue.genreId } : null
+    };
+    
+    return videoData;
   }
 }

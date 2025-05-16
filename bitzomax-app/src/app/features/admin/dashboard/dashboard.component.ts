@@ -314,7 +314,10 @@ export class DashboardComponent implements OnInit {
         likes: randomLikes,
         isPremium: Math.random() > 0.7,
         uploadDate: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
-        tags: ['cyberpunk', 'future', 'neon']
+        tags: ['cyberpunk', 'future', 'neon'],
+        isVisible: true,
+        commentCount: Math.floor(randomLikes * 0.8),
+        shareCount: Math.floor(randomLikes * 0.5)
       });
     }
     

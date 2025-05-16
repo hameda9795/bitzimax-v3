@@ -23,118 +23,186 @@
     <div class="absolute inset-0 bg-gradient-to-r from-deep-purple via-hot-pink to-electric-blue opacity-10"></div>
   </div>
 
-  <!-- Main Content -->
+  <!-- Main Content with Sidebar -->
   <div class="container mx-auto px-4 py-12">
-    <!-- Featured Videos -->
-    <div class="mb-16">
-      <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
-        Featured Content
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        <div *ngFor="let video of featuredVideos" 
-             class="video-card bg-cyber-black border border-neon-green rounded-lg overflow-hidden">
-          <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
-            <img [src]="video.thumbnailUrl" 
-                 [alt]="video.title" 
-                 class="w-full h-full">
-            <div class="video-info-overlay absolute inset-0 p-3 flex flex-col justify-end">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
-                <span *ngIf="video.isPremium" class="bg-hot-pink text-white px-2 py-1 rounded-full text-xs">PREMIUM</span>
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Main Content -->
+      <div class="lg:w-8/12">
+        <!-- Featured Videos -->
+        <div class="mb-16">
+          <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
+            Featured Content
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let video of featuredVideos" 
+                class="video-card bg-cyber-black border border-neon-green rounded-lg overflow-hidden">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+                <img [src]="video.thumbnailUrl" 
+                    [alt]="video.title" 
+                    class="w-full h-full">
+                <div class="video-info-overlay absolute inset-0 p-3 flex flex-col justify-end">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                    <span *ngIf="video.isPremium" class="bg-hot-pink text-white px-2 py-1 rounded-full text-xs">PREMIUM</span>
+                  </div>
+                  <h3 class="text-base font-bold text-white mb-1 line-clamp-2">{{ video.title }}</h3>
+                  <p class="text-xs text-gray-300 line-clamp-2">{{ video.description }}</p>
+                </div>
               </div>
-              <h3 class="text-base font-bold text-white mb-1 line-clamp-2">{{ video.title }}</h3>
-              <p class="text-xs text-gray-300 line-clamp-2">{{ video.description }}</p>
+              <div class="p-3 border-t border-neon-green bg-opacity-30 mt-auto">
+                <div class="flex justify-between items-center">
+                  <span class="text-electric-blue text-xs">{{ video.views | number }} views</span>
+                  <button (click)="toggleLike(video, $event)" 
+                          class="text-hot-pink hover:text-neon-green transition-colors">
+                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                    <span class="ml-1 text-xs">{{ video.likes }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="p-3 border-t border-neon-green bg-opacity-30 mt-auto">
-            <div class="flex justify-between items-center">
-              <span class="text-electric-blue text-xs">{{ video.views | number }} views</span>
-              <button (click)="toggleLike(video, $event)" 
-                      class="text-hot-pink hover:text-neon-green transition-colors">
-                <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                <span class="ml-1 text-xs">{{ video.likes }}</span>
-              </button>
+        </div>
+
+        <!-- Popular Videos -->
+        <div class="mb-16">
+          <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
+            Trending Now
+          </h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            <div *ngFor="let video of popularVideos" 
+                class="video-card bg-cyber-black border border-electric-blue rounded-lg overflow-hidden">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+                <img [src]="video.thumbnailUrl" 
+                    [alt]="video.title" 
+                    class="w-full h-full">
+                <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                    <span *ngIf="video.isPremium" 
+                          class="bg-hot-pink text-white px-2 py-0.5 rounded-full text-xs">
+                      PREMIUM
+                    </span>
+                  </div>
+                  <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
+                </div>
+              </div>
+              <div class="p-2 border-t border-electric-blue bg-opacity-30 mt-auto">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-electric-blue">{{ video.views | number }} views</span>
+                  <button (click)="toggleLike(video, $event)" 
+                          class="text-hot-pink hover:text-neon-green transition-colors">
+                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                    <span class="ml-1">{{ video.likes }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Uploads -->
+        <div class="mb-16">
+          <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
+            Latest Uploads
+          </h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            <div *ngFor="let video of recentVideos" 
+                class="video-card bg-cyber-black border border-hot-pink rounded-lg overflow-hidden">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+                <img [src]="video.thumbnailUrl" 
+                    [alt]="video.title" 
+                    class="w-full h-full">
+                <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                    <span *ngIf="video.isPremium" 
+                          class="bg-hot-pink text-white px-2 py-0.5 rounded-full text-xs">
+                      PREMIUM
+                    </span>
+                  </div>
+                  <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
+                  <p class="text-xs text-gray-300">{{ video.uploadDate | date }}</p>
+                </div>
+              </div>
+              <div class="p-2 border-t border-hot-pink bg-opacity-30 mt-auto">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-electric-blue">{{ video.views | number }} views</span>
+                  <button (click)="toggleLike(video, $event)" 
+                          class="text-hot-pink hover:text-neon-green transition-colors">
+                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                    <span class="ml-1">{{ video.likes }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Popular Videos -->
-    <div class="mb-16">
-      <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
-        Trending Now
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <div *ngFor="let video of popularVideos" 
-             class="video-card bg-cyber-black border border-electric-blue rounded-lg overflow-hidden">
-          <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
-            <img [src]="video.thumbnailUrl" 
-                 [alt]="video.title" 
-                 class="w-full h-full">
-            <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
-                <span *ngIf="video.isPremium" 
-                      class="bg-hot-pink text-white px-2 py-0.5 rounded-full text-xs">
-                  PREMIUM
-                </span>
+      
+      <!-- Sidebar Content -->
+      <div class="lg:w-4/12">
+        <div class="sticky top-8">
+          <!-- Genre-based Sidebar -->
+          <div class="mb-4 border-b border-electric-blue pb-2">
+            <h2 class="text-2xl font-cyber font-bold text-hot-pink mb-2">Explore By Genre</h2>
+          </div>
+          
+          <!-- No Genres Message -->
+          <div *ngIf="genreSidebar.length === 0" class="mb-8 p-4 bg-cyber-dark bg-opacity-30 border border-electric-blue rounded-lg text-center">
+            <mat-icon class="text-electric-blue text-4xl mb-2">category</mat-icon>
+            <p class="text-gray-400 mb-2">No genre-based content available.</p>
+            <p class="text-xs text-gray-500">Genres will appear here once videos are categorized.</p>
+          </div>
+          
+          <!-- Genre Sections -->
+          <div *ngFor="let genreSection of genreSidebar" class="mb-8 genre-sidebar-section">
+            <div class="genre-sidebar-header mb-4 border-b border-hot-pink pb-2 flex items-center justify-between">
+              <h3 class="text-2xl font-cyber font-bold text-electric-blue">{{ genreSection.genre.name }}</h3>
+              <a href="#" class="text-neon-green hover:text-hot-pink text-sm">View All</a>
+            </div>
+            
+            <!-- Vertical Video List (9:16 ratio) -->
+            <div class="grid grid-cols-2 gap-4">
+              <div *ngFor="let video of genreSection.videos" 
+                  class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer"
+                  (click)="watchVideo(video.id)">
+                <!-- 9:16 aspect ratio container -->
+                <div class="relative pb-[177.78%]">
+                  <img [src]="video.thumbnailUrl" 
+                      [alt]="video.title" 
+                      class="absolute inset-0 w-full h-full object-cover">
+                  
+                  <!-- Gradient overlay for better text readability -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-transparent to-transparent opacity-80"></div>
+                  
+                  <!-- Video title overlay -->
+                  <div class="absolute bottom-0 left-0 right-0 p-2 text-white">
+                    <h4 class="text-sm font-bold line-clamp-2">{{ video.title }}</h4>
+                    <div class="flex items-center justify-between mt-1">
+                      <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                      <span *ngIf="video.isPremium" 
+                            class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                        PRO
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
             </div>
           </div>
-          <div class="p-2 border-t border-electric-blue bg-opacity-30 mt-auto">
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-electric-blue">{{ video.views | number }} views</span>
-              <button (click)="toggleLike(video, $event)" 
-                      class="text-hot-pink hover:text-neon-green transition-colors">
-                <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                <span class="ml-1">{{ video.likes }}</span>
-              </button>
-            </div>
+          
+          <!-- Promo Banner -->
+          <div class="sidebar-promo mt-8 p-6 rounded-lg bg-gradient-to-r from-deep-purple to-hot-pink text-white">
+            <h3 class="text-xl font-bold mb-2">Discover More Genres</h3>
+            <p class="mb-4 text-sm">Explore our full library of videos organized by genre.</p>
+            <button class="bg-white text-hot-pink font-bold py-2 px-4 rounded-lg text-sm">
+              Browse Library
+            </button>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Recent Uploads -->
-    <div class="mb-16">
-      <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
-        Latest Uploads
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <div *ngFor="let video of recentVideos" 
-             class="video-card bg-cyber-black border border-hot-pink rounded-lg overflow-hidden">
-          <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
-            <img [src]="video.thumbnailUrl" 
-                 [alt]="video.title" 
-                 class="w-full h-full">
-            <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
-                <span *ngIf="video.isPremium" 
-                      class="bg-hot-pink text-white px-2 py-0.5 rounded-full text-xs">
-                  PREMIUM
-                </span>
-              </div>
-              <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
-              <p class="text-xs text-gray-300">{{ video.uploadDate | date }}</p>
-            </div>
-          </div>
-          <div class="p-2 border-t border-hot-pink bg-opacity-30 mt-auto">
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-electric-blue">{{ video.views | number }} views</span>
-              <button (click)="toggleLike(video, $event)" 
-                      class="text-hot-pink hover:text-neon-green transition-colors">
-                <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                <span class="ml-1">{{ video.likes }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    
     <!-- Load More Section -->
     <div class="text-center py-8">
       <button class="cyber-button text-lg py-3 px-8 font-bold text-white">

@@ -6,26 +6,26 @@ import { VideoService } from '../../core/services/video.service';
 import { UserService } from '../../core/services/user.service';
 import { Video } from '../../shared/models/video.model';
 import { CommonModule } from '@angular/common';
+import { ShareModalComponent } from './share-modal/share-modal.component';
 
-@Component({
-  selector: 'app-video',
+@Component({  selector: 'app-video',
   templateUrl: './video.component.html',
   styleUrls: ['./video.component.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, ShareModalComponent]
 })
 export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChildren('videoPlayer') videoPlayers!: QueryList<ElementRef<HTMLVideoElement>>;
   
   video: Video | null = null;
-  relatedVideos: Video[] = [];
-  isPlaying = false;
+  relatedVideos: Video[] = [];  isPlaying = false;
   currentTime = 0;
   duration = 0;
   isLiked = false;
   showSubscriptionBanner = false;
   isSubscribed = false;
   baseUrl = 'http://localhost:8080';
+  showShareModal = false;
   private previewTimeLimit = 30; // 30 seconds preview for free users
   private activeVideoPlayer: HTMLVideoElement | null = null;
   
@@ -249,5 +249,26 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
+  openShareModal(): void {
+    this.showShareModal = true;
+    
+    // If the video has a shareCount property, increment it on the backend
+    if (this.video && this.video.id) {
+      this.videoService.trackShare(this.video.id).subscribe({
+        next: (success: boolean) => {
+          if (success && this.video && this.video.shareCount !== undefined) {
+            // Increment local share count
+            this.video.shareCount++;
+          }
+        },
+        error: (error: Error) => console.error('Error tracking share:', error)
+      });
+    }
+  }
+
+  closeShareModal(): void {
+    this.showShareModal = false;
   }
 }

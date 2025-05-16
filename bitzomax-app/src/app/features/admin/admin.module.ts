@@ -15,6 +15,18 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatListModule } from '@angular/material/list';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatMenuModule } from '@angular/material/menu';
 
 // Chart.js
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
@@ -28,6 +40,8 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { VideoManagementComponent } from './video-management/video-management.component';
 import { VideoUploadComponent } from './video-upload/video-upload.component';
 import { VideoCleanupComponent } from './components/video-cleanup/video-cleanup.component';
+import { GenreManagementComponent } from './genre-management/genre-management.component';
+import { ConfirmDialogComponent } from './genre-management/confirm-dialog/confirm-dialog.component';
 
 const materialModules = [
   MatCardModule,
@@ -40,7 +54,19 @@ const materialModules = [
   MatIconModule,
   MatTabsModule,
   MatProgressBarModule,
-  MatSlideToggleModule
+  MatSlideToggleModule,
+  MatPaginatorModule,
+  MatSortModule,
+  MatCheckboxModule,
+  MatSnackBarModule,
+  MatProgressSpinnerModule,
+  MatDialogModule,
+  MatDatepickerModule,
+  MatNativeDateModule,
+  MatTooltipModule,
+  MatListModule,
+  MatAutocompleteModule,
+  MatMenuModule
 ];
 
 @NgModule({
@@ -58,7 +84,9 @@ const materialModules = [
     UserManagementComponent,
     VideoManagementComponent,
     VideoUploadComponent,
-    VideoCleanupComponent
+    VideoCleanupComponent,
+    GenreManagementComponent,
+    ConfirmDialogComponent
   ],
   providers: [
     provideCharts(withDefaultRegisterables())

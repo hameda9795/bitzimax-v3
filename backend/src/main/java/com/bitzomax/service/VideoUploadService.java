@@ -50,11 +50,11 @@ public class VideoUploadService {
             Files.copy(file.getInputStream(), filePath);
             
             // Set video metadata
-            videoMetadata.setVideoUrl("/videos/" + uniqueFilename);
+            videoMetadata.setVideoUrl("/uploads/videos/" + uniqueFilename);
             videoMetadata.setOriginalFormat(fileExtension);
             videoMetadata.setUploadDate(LocalDateTime.now());
             videoMetadata.setConversionStatus(ConversionStatus.PROCESSING);
-            videoMetadata.setIsVisible(false); // Hide until processing is complete
+            videoMetadata.setIsVisible(true); // Set video to visible immediately
             
             // Save video entry
             Video savedVideo = videoService.saveVideo(videoMetadata);
@@ -75,23 +75,18 @@ public class VideoUploadService {
     @Async
     public void simulateVideoProcessing(Video video) {
         try {
-            logger.info("Processing video: {}", video.getTitle());
+            // Simulate processing time
+            Thread.sleep(3000);
             
-            // Simulate processing delay
-            Thread.sleep(5000);
+            // Update video status
+            video.setConversionStatus(ConversionStatus.COMPLETED);
+            video.setIsVisible(true); // Set video to visible after processing
+            videoService.saveVideo(video);
             
-            // Update status to completed
-            videoService.updateVideoConversionStatus(video.getId(), ConversionStatus.COMPLETED);
-            
-            // Make video visible
-            videoService.updateVideoVisibility(video.getId(), true);
-            
-            logger.info("Video processing completed: {}", video.getTitle());
+            logger.info("Video processing completed for: {}", video.getTitle());
         } catch (InterruptedException e) {
             logger.error("Video processing interrupted", e);
-            
-            // Update status to failed
-            videoService.updateVideoConversionStatus(video.getId(), ConversionStatus.FAILED);
+            Thread.currentThread().interrupt();
         }
     }
     

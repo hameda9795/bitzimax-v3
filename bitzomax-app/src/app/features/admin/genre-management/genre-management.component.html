@@ -1,0 +1,112 @@
+<div class="cyberpunk-container">
+  <div class="cyberpunk-header">
+    <h1 class="neon-text">GENRES MANAGEMENT</h1>
+    <div class="grid-line"></div>
+  </div>
+
+  <div class="content-container">
+    <!-- Genre Form -->
+    <mat-card class="cyberpunk-card genre-form-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">{{ isEditing ? 'EDIT GENRE' : 'ADD NEW GENRE' }}</h2>
+        <div class="card-accent"></div>
+      </div>
+      
+      <div class="card-content">
+        <form [formGroup]="genreForm" (ngSubmit)="onSubmit()">
+          <!-- Name Field -->
+          <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+            <mat-label>Genre Name</mat-label>
+            <input matInput formControlName="name" placeholder="Enter genre name">
+            <mat-error *ngIf="genreForm.get('name')?.hasError('required')">
+              Name is required
+            </mat-error>
+            <mat-error *ngIf="genreForm.get('name')?.hasError('minlength')">
+              Name must be at least 2 characters
+            </mat-error>
+            <mat-error *ngIf="genreForm.get('name')?.hasError('maxlength')">
+              Name cannot exceed 50 characters
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- Description Field -->
+          <mat-form-field appearance="fill" class="cyberpunk-field full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="3" 
+                      placeholder="Enter genre description"></textarea>
+            <mat-error *ngIf="genreForm.get('description')?.hasError('maxlength')">
+              Description cannot exceed 500 characters
+            </mat-error>
+          </mat-form-field>
+          
+          <div class="button-row">
+            <button type="submit" mat-raised-button color="primary" 
+                    class="cyberpunk-button" 
+                    [disabled]="genreForm.invalid">
+              {{ isEditing ? 'UPDATE' : 'CREATE' }}
+            </button>
+            
+            <button type="button" mat-stroked-button 
+                    class="cyberpunk-button-outline" 
+                    (click)="resetForm()" 
+                    *ngIf="isEditing">
+              CANCEL
+            </button>
+          </div>
+        </form>
+      </div>
+    </mat-card>
+
+    <!-- Genres Table -->
+    <mat-card class="cyberpunk-card genre-table-card">
+      <div class="card-header">
+        <h2 class="neon-text-sub">AVAILABLE GENRES</h2>
+        <div class="card-accent"></div>
+      </div>
+      
+      <div class="card-content">
+        <div class="table-container">
+          <table mat-table [dataSource]="genres" class="cyberpunk-table">
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef>ID</th>
+              <td mat-cell *matCellDef="let genre">{{ genre.id }}</td>
+            </ng-container>
+            
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let genre">{{ genre.name }}</td>
+            </ng-container>
+            
+            <!-- Description Column -->
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let genre">{{ genre.description }}</td>
+            </ng-container>
+            
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let genre">
+                <button mat-icon-button color="primary" (click)="editGenre(genre)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteGenre(genre)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+          
+          <div class="no-data-message" *ngIf="genres.length === 0">
+            <p>No genres available. Create one using the form.</p>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div> 

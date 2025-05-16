@@ -1,0 +1,49 @@
+@use "../../../../../styles.scss" as styles;
+
+.cyberpunk-dialog {
+  background-color: var(--cyber-black);
+  border: 1px solid var(--electric-blue);
+  padding: 1rem;
+  
+  .neon-text {
+    color: var(--hot-pink);
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px rgba(var(--hot-pink-rgb), 0.8);
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: var(--cyber-white);
+    margin-bottom: 1.5rem;
+  }
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.cyberpunk-button {
+  background: linear-gradient(to right, var(--hot-pink), var(--neon-red));
+  color: white;
+  text-transform: uppercase;
+  font-weight: 600;
+  
+  &:hover {
+    box-shadow: 0 0 15px rgba(var(--hot-pink-rgb), 0.8);
+  }
+}
+
+.cyberpunk-button-outline {
+  color: var(--electric-blue);
+  border: 1px solid var(--electric-blue);
+  text-transform: uppercase;
+  
+  &:hover {
+    background-color: rgba(var(--electric-blue-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(var(--electric-blue-rgb), 0.5);
+  }
+} 

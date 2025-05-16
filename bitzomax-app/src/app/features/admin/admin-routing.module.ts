@@ -5,6 +5,7 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { VideoManagementComponent } from './video-management/video-management.component';
 import { VideoUploadComponent } from './video-upload/video-upload.component';
 import { VideoCleanupComponent } from './components/video-cleanup/video-cleanup.component';
+import { GenreManagementComponent } from './genre-management/genre-management.component';
 
 const routes: Routes = [
   { 
@@ -26,6 +27,10 @@ const routes: Routes = [
   { 
     path: 'cleanup', 
     component: VideoCleanupComponent 
+  },
+  {
+    path: 'genres',
+    component: GenreManagementComponent
   }
 ];
 

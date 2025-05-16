@@ -3,7 +3,7 @@ package com.bitzomax.controller;
 import com.bitzomax.dto.FileUploadResponse;
 import com.bitzomax.dto.VideoDTO;
 import com.bitzomax.exception.FileStorageException;
-import com.bitzomax.model.Video;
+import com.bitzomax.model.ConversionStatus;
 import com.bitzomax.service.FileStorageService;
 import com.bitzomax.service.VideoService;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,11 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * REST controller for admin video management operations
@@ -85,14 +82,13 @@ public class AdminVideoController {
             VideoDTO videoDTO = new VideoDTO();
             videoDTO.setTitle(title);
             videoDTO.setDescription(description);
-            videoDTO.setVideoUrl(videoResponse.getFileName());
-            videoDTO.setThumbnailUrl(thumbnailResponse.getFileName());
+            videoDTO.setVideoUrl(videoResponse.getFilePath());
+            videoDTO.setThumbnailUrl(thumbnailResponse.getFilePath());
             videoDTO.setIsPremium(isPremium);
             videoDTO.setPoemText(poemText);
             videoDTO.setSeoTitle(seoTitle);
-            videoDTO.setSeoDescription(seoDescription);
-            videoDTO.setOriginalFormat(videoFile.getContentType());
-            videoDTO.setConversionStatus(Video.ConversionStatus.COMPLETED);
+            videoDTO.setSeoDescription(seoDescription);            videoDTO.setOriginalFormat(videoFile.getContentType());
+            videoDTO.setConversionStatus(ConversionStatus.COMPLETED);
             
             // Set the duration (in a real app, this would be extracted from the video)
             // For now, we'll set a placeholder value
@@ -285,7 +281,7 @@ public class AdminVideoController {
             }
             
             // Update video with new thumbnail URL
-            currentVideo.setThumbnailUrl(thumbnailResponse.getFileName());
+            currentVideo.setThumbnailUrl(thumbnailResponse.getFilePath());
             VideoDTO updatedVideo = videoService.updateVideo(id, currentVideo);
             
             return ResponseEntity.ok(updatedVideo);

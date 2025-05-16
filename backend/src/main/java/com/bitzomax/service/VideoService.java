@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +57,8 @@ public class VideoService {
         logger.debug("Finding video by ID: {}", id);
         return videoRepository.findById(id);
     }
-      @Transactional
+    
+    @Transactional
     public Video saveVideo(Video video) {
         logger.debug("Saving new video: {}", video.getTitle());
         // Set defaults if not provided
@@ -67,21 +67,6 @@ public class VideoService {
         }
         if (video.getIsVisible() == null) {
             video.setIsVisible(true);
-        }
-        if (video.getUploadDate() == null) {
-            video.setUploadDate(LocalDateTime.now());
-        }
-        if (video.getViews() == null) {
-            video.setViews(0L);
-        }
-        if (video.getLikes() == null) {
-            video.setLikes(0L);
-        }
-        if (video.getCommentCount() == null) {
-            video.setCommentCount(0L);
-        }
-        if (video.getShareCount() == null) {
-            video.setShareCount(0L);
         }
         
         return videoRepository.save(video);
@@ -129,7 +114,8 @@ public class VideoService {
     
     /**
      * Create a new video from DTO
-     */    @Transactional
+     */
+    @Transactional
     public VideoDTO createVideo(VideoDTO videoDTO) {
         logger.debug("Creating new video from DTO: {}", videoDTO.getTitle());
         
@@ -138,18 +124,9 @@ public class VideoService {
             videoDTO.setConversionStatus(ConversionStatus.COMPLETED);
         }
         
-        videoDTO.setIsVisible(true); // Ensure newly created videos are always marked as visible
-        
-        // Always ensure uploadDate is set for new videos
-        if (videoDTO.getUploadDate() == null) {
-            videoDTO.setUploadDate(LocalDateTime.now());
+        if (videoDTO.getIsVisible() == null) {
+            videoDTO.setIsVisible(true);
         }
-        
-        // Initialize counters
-        if (videoDTO.getViews() == null) videoDTO.setViews(0L);
-        if (videoDTO.getLikes() == null) videoDTO.setLikes(0L);
-        if (videoDTO.getCommentCount() == null) videoDTO.setCommentCount(0L);
-        if (videoDTO.getShareCount() == null) videoDTO.setShareCount(0L);
         
         // Convert DTO to entity
         Video video = videoMapper.toEntity(videoDTO);
@@ -160,5 +137,108 @@ public class VideoService {
         
         // Convert back to DTO and return
         return videoMapper.toDto(savedVideo);
+    }
+    
+    /**
+     * Get a video by ID and convert it to a DTO
+     *
+     * @param id the video ID
+     * @return the video DTO
+     */
+    public VideoDTO getVideoById(Long id) {
+        logger.debug("Getting video by ID: {}", id);
+        Video video = videoRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
+        return videoMapper.toDto(video);
+    }
+    
+    /**
+     * Get all videos with pagination and convert them to DTOs
+     *
+     * @param pageable the pagination information
+     * @return a page of video DTOs
+     */
+    public Page<VideoDTO> getAllVideosWithPagination(Pageable pageable) {
+        logger.debug("Getting all videos with pagination: {}", pageable);
+        Page<Video> videoPage = videoRepository.findAll(pageable);
+        return videoPage.map(videoMapper::toDto);
+    }
+    
+    /**
+     * Update a video from DTO
+     *
+     * @param id the video ID to update
+     * @param videoDTO the updated video data
+     * @return the updated video DTO
+     */
+    @Transactional
+    public VideoDTO updateVideo(Long id, VideoDTO videoDTO) {
+        logger.debug("Updating video with ID: {}", id);
+        Video existingVideo = videoRepository.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
+        
+        // Update the existing video with data from the DTO
+        videoMapper.updateEntityFromDto(videoDTO, existingVideo);
+        
+        // Save the updated video
+        Video updatedVideo = videoRepository.save(existingVideo);
+        logger.info("Updated video: {} (ID: {})", updatedVideo.getTitle(), updatedVideo.getId());
+        
+        // Convert back to DTO and return
+        return videoMapper.toDto(updatedVideo);
+    }
+    
+    /**
+     * Helper class to store video relevance score
+     */
+    private static class VideoRelevance {
+        final Video video;
+        final int score;
+        
+        VideoRelevance(Video video, int score) {
+            this.video = video;
+            this.score = score;
+        }
+    }
+
+    /**
+     * Find related videos based on tags and hashtags
+     *
+     * @param video the source video
+     * @param limit maximum number of related videos to return
+     * @return list of related videos
+     */
+    public List<Video> findRelatedVideos(Video video, int limit) {
+        logger.debug("Finding related videos for video ID: {}, limit: {}", video.getId(), limit);
+        
+        // Get all videos
+        List<Video> allVideos = videoRepository.findByIsVisibleTrue();
+        
+        // Remove the source video from the list
+        allVideos.removeIf(v -> v.getId().equals(video.getId()));
+        
+        // Sort videos by relevance (number of matching tags and hashtags)
+        return allVideos.stream()
+            .filter(v -> v.getIsVisible() != null && v.getIsVisible())
+            .map(relatedVideo -> {
+                int score = 0;
+                // Count matching tags
+                if (video.getTags() != null && relatedVideo.getTags() != null) {
+                    score += video.getTags().stream()
+                        .filter(tag -> relatedVideo.getTags().contains(tag))
+                        .count();
+                }
+                // Count matching hashtags
+                if (video.getHashtags() != null && relatedVideo.getHashtags() != null) {
+                    score += video.getHashtags().stream()
+                        .filter(hashtag -> relatedVideo.getHashtags().contains(hashtag))
+                        .count();
+                }
+                return new VideoRelevance(relatedVideo, score);
+            })
+            .sorted((a, b) -> Integer.compare(b.score, a.score))
+            .limit(limit)
+            .map(vr -> vr.video)
+            .toList();
     }
 }

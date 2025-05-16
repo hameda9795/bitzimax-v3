@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpParams, HttpRequest } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpParams, HttpRequest, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError, catchError, map, tap } from 'rxjs';
 import { Video } from '../../shared/models/video.model';
 import { PageRequest, PageResponse } from '../../shared/models/pagination.model';
@@ -27,6 +27,12 @@ interface VideoResponse {
   engagementRate?: number;
   commentCount?: number;
   shareCount?: number;
+  isVisible?: boolean;
+  genre?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
 }
 
 interface VideoPageResponse {
@@ -68,14 +74,54 @@ export class VideoService {
   });
   public uploadProgress$ = this.uploadProgressSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  private videosSubject = new BehaviorSubject<Video[]>([]);
+  public videos$ = this.videosSubject.asObservable();
 
-  // Helper method to ensure URLs are absolute
-  private ensureAbsoluteUrl(url: string): string {
+  constructor(private http: HttpClient) {
+    this.loadVideos(); // Load videos initially
+  }
+
+  /**
+   * Load all videos from the backend
+   */
+  private loadVideos(): void {
+    this.getAllVideos().subscribe(videos => {
+      this.videosSubject.next(videos);
+    });
+  }
+
+  /**
+   * Refresh the videos list
+   */
+  public refreshVideos(): void {
+    this.loadVideos();
+  }
+
+  /**
+   * Ensure a URL is absolute
+   */
+  private ensureFullUrl(url: string): string {
     if (!url) return '';
-    if (url.startsWith('http')) return url;
-    if (url.startsWith('/')) return `${this.baseUrl}${url}`;
-    return `${this.baseUrl}/${url}`;
+    
+    // If the URL is already absolute, return it as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // Handle both /videos/ and /uploads/videos/ paths
+    if (!url.startsWith('/')) {
+      url = '/' + url;
+    }
+    
+    // If the URL doesn't start with /uploads/ and contains /videos/, add /uploads
+    if (!url.startsWith('/uploads/') && url.includes('/videos/')) {
+      url = '/uploads' + url;
+    }
+    
+    // Replace assets/videos with /uploads/videos
+    url = url.replace('assets/videos', '/uploads/videos');
+    
+    return `${this.baseUrl}${url}`;
   }
 
   /**
@@ -107,34 +153,52 @@ export class VideoService {
       .pipe(
         map((response: VideoPageResponse): PageResponse<Video> => ({
           ...response,
-          content: response.content.map((video: VideoResponse): Video => ({
-            ...video,
-            thumbnailUrl: this.ensureAbsoluteUrl(video.thumbnailUrl),
-            videoUrl: this.ensureAbsoluteUrl(video.videoUrl),
-            uploadDate: new Date(video.uploadDate),
-            duration: video.duration || 0
-          }))
+          content: response.content.map((video: VideoResponse): Video => this.convertVideoResponse(video))
         })),
         tap((): void => this.loadingSubject.next(false)),
         catchError((error: HttpErrorResponse) => this.handleError(error))
       );
   }
   
+  private convertVideoResponse(video: VideoResponse): Video {
+    // Ensure valid date or use current date as fallback
+    let uploadDate: Date;
+    try {
+      uploadDate = video.uploadDate ? new Date(video.uploadDate) : new Date();
+      // Check if date is valid
+      if (isNaN(uploadDate.getTime())) {
+        uploadDate = new Date();
+      }
+    } catch (e) {
+      uploadDate = new Date();
+    }
+
+    return {
+      ...video,
+      uploadDate: uploadDate,
+      thumbnailUrl: this.ensureFullUrl(video.thumbnailUrl),
+      videoUrl: this.ensureFullUrl(video.videoUrl),
+      duration: video.duration || 0,
+      isVisible: video.isVisible !== undefined ? video.isVisible : true,
+      commentCount: video.commentCount || 0,
+      shareCount: video.shareCount || 0
+    };
+  }
+
   /**
-   * Get all videos (non-paginated, for backwards compatibility)
+   * Get all videos (non-paginated)
    */
   getAllVideos(): Observable<Video[]> {
     this.loadingSubject.next(true);
     return this.http.get<VideoResponse[]>(this.apiUrl)
       .pipe(
         map((videos: VideoResponse[]): Video[] => {
-          // Convert date strings to Date objects
-          return videos.map((video: VideoResponse): Video => ({
-            ...video,
-            uploadDate: new Date(video.uploadDate)
-          }));
+          return videos.map(video => this.convertVideoResponse(video));
         }),
-        tap((): void => this.loadingSubject.next(false)),
+        tap((videos: Video[]): void => {
+          console.log('Loaded videos:', videos);
+          this.loadingSubject.next(false);
+        }),
         catchError((error: HttpErrorResponse) => this.handleError(error))
       );
   }
@@ -156,7 +220,10 @@ export class VideoService {
       .pipe(
         map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
           ...video,
-          uploadDate: new Date(video.uploadDate)
+          uploadDate: new Date(video.uploadDate),
+          isVisible: video.isVisible !== undefined ? video.isVisible : true,
+          commentCount: video.commentCount || 0,
+          shareCount: video.shareCount || 0
         }))),
         tap((): void => this.loadingSubject.next(false)),
         catchError((error: HttpErrorResponse) => this.handleError(error))
@@ -180,7 +247,10 @@ export class VideoService {
       .pipe(
         map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
           ...video,
-          uploadDate: new Date(video.uploadDate)
+          uploadDate: new Date(video.uploadDate),
+          isVisible: video.isVisible !== undefined ? video.isVisible : true,
+          commentCount: video.commentCount || 0,
+          shareCount: video.shareCount || 0
         }))),
         tap((): void => this.loadingSubject.next(false)),
         catchError((error: HttpErrorResponse) => this.handleError(error))
@@ -194,13 +264,9 @@ export class VideoService {
     this.loadingSubject.next(true);
     return this.http.get<VideoResponse>(`${this.apiUrl}/${id}`)
       .pipe(
-        map((video: VideoResponse): Video => ({
-          ...video,
-          uploadDate: new Date(video.uploadDate)
-        })),
+        map((video: VideoResponse): Video => this.convertVideoResponse(video)),
         tap((): void => this.loadingSubject.next(false)),
         catchError((error: HttpErrorResponse) => {
-          // For 404 errors, return undefined instead of throwing
           if (error.status === 404) {
             this.loadingSubject.next(false);
             return of(undefined);
@@ -260,7 +326,10 @@ export class VideoService {
       .pipe(
         map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
           ...video,
-          uploadDate: new Date(video.uploadDate)
+          uploadDate: new Date(video.uploadDate),
+          isVisible: video.isVisible !== undefined ? video.isVisible : true,
+          commentCount: video.commentCount || 0,
+          shareCount: video.shareCount || 0
         }))),
         tap((): void => this.loadingSubject.next(false)),
         catchError((error: HttpErrorResponse) => this.handleError(error))
@@ -268,7 +337,7 @@ export class VideoService {
   }
   /**
    * Upload a video with progress tracking
-   */
+   */  
   uploadVideo(videoFile: File, thumbnailFile: File, videoData: Partial<Video>): Observable<HttpEvent<any>> {
     this.uploadProgressSubject.next({
       progress: 0,
@@ -283,10 +352,30 @@ export class VideoService {
     }
     
     formData.append('thumbnailFile', thumbnailFile);
-    formData.append('videoData', JSON.stringify(videoData));
+    
+    // Clean up undefined values before serializing
+    const cleanVideoData = Object.entries(videoData).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        // Using type assertion to bypass TypeScript's indexing restriction
+        (acc as any)[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    // Log the data being sent for debugging
+    console.log('Sending video data:', cleanVideoData);
+    formData.append('videoData', JSON.stringify(cleanVideoData));
+    
+    // Get the current user ID for the X-User-ID header
+    // Mock user ID for now - in a real app, you would get this from authentication service
+    const userId = localStorage.getItem('userId') || '1'; 
+    
+    // Create headers with the X-User-ID
+    const headers = new HttpHeaders().set('X-User-ID', userId);
     
     const req = new HttpRequest('POST', `${this.apiUrl}/upload`, formData, {
-      reportProgress: true
+      reportProgress: true,
+      headers: headers
     });
     
     return this.http.request(req).pipe(
@@ -376,7 +465,10 @@ export class VideoService {
     return this.http.put<VideoResponse>(`${this.apiUrl}/${videoId}`, videoData).pipe(
       map((video: VideoResponse): Video => ({
         ...video,
-        uploadDate: new Date(video.uploadDate)
+        uploadDate: new Date(video.uploadDate),
+        isVisible: video.isVisible !== undefined ? video.isVisible : true,
+        commentCount: video.commentCount || 0,
+        shareCount: video.shareCount || 0
       })),
       catchError((error: HttpErrorResponse) => {
         console.error('Error updating video metadata:', error);
@@ -385,6 +477,19 @@ export class VideoService {
     );
   }
   
+  /**
+   * Track video share
+   */
+  trackShare(videoId: string): Observable<boolean> {
+    return this.http.post<void>(`${this.apiUrl}/${videoId}/share`, {}).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error tracking share:', error);
+        return of(false);
+      })
+    );
+  }
+
   /**
    * Reset upload progress
    */

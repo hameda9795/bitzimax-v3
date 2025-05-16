@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,33 +46,67 @@ public class FileStorageService {
 
     /**
      * Store a video file and update its conversion status
-     */    public FileUploadResponse storeVideoFile(MultipartFile file) {
-        FileUploadResponse fileResponse = storeFile(file, videoStorageLocation);
-        String fileName = fileResponse.getFileName();
+     */
+    public FileUploadResponse storeVideoFile(MultipartFile file) {
+        // Get the response from storeFile, which now contains the correct web path
+        FileUploadResponse response = storeFile(file, videoStorageLocation);
         
-        // Use API URL path format instead of filesystem path
-        String apiPath = "/api/files/videos/" + fileName;
+        // Extract video duration
+        try {
+            int duration = extractVideoDuration(response.getFilePath());
+            response.setDuration(duration);
+        } catch (Exception e) {
+            logger.error("Error extracting video duration", e);
+            // Set a default duration if extraction fails
+            response.setDuration(0);
+        }
         
-        // Update conversion status in a separate thread
+        // Keep the async processing logic
         CompletableFuture.runAsync(() -> {
             try {
-                // Simulate processing delay
-                Thread.sleep(3000);
-                
-                // After processing is complete, update the video status
-                // This would typically be done by a video processing service
-                // For now, we'll just log it
-                logger.info("Video processing completed for: {}", fileName);
-                
-                // In a real implementation, you would find the video entity and update it:
-                // videoService.updateVideoConversionStatus(videoId, ConversionStatus.COMPLETED);
-                // videoService.updateVideoVisibility(videoId, true);
+                Thread.sleep(3000); // Simulate processing
+                logger.info("Video processing completed for: {}", response.getFileName());
             } catch (InterruptedException e) {
                 logger.error("Video processing interrupted", e);
+                Thread.currentThread().interrupt(); // Restore interruption status
             }
         });
         
-        return new FileUploadResponse(fileName, file.getContentType(), apiPath, file.getSize());
+        // Return the response with the web path and duration
+        return response;
+    }
+
+    /**
+     * Extract video duration using FFmpeg
+     * @param filePath Path to the video file
+     * @return Duration in seconds
+     */
+    private int extractVideoDuration(String filePath) throws IOException {
+        String[] cmd = {
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            filePath
+        };
+        
+        Process process = Runtime.getRuntime().exec(cmd);
+        
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String durationStr = reader.readLine();
+            if (durationStr != null && !durationStr.isEmpty()) {
+                // Convert duration string to seconds (rounded to nearest integer)
+                return (int) Math.round(Double.parseDouble(durationStr));
+            }
+        } catch (Exception e) {
+            logger.error("Error extracting video duration: {}", e.getMessage());
+            throw new IOException("Failed to extract video duration", e);
+        }
+        
+        return 0; // Return 0 if duration couldn't be extracted
     }
 
     /**
@@ -78,16 +114,9 @@ public class FileStorageService {
      * 
      * @param file The MultipartFile to store
      * @return FileUploadResponse with details of the stored file
-     */    public FileUploadResponse storeThumbnailFile(MultipartFile file) {
-        FileUploadResponse response = storeFile(file, thumbnailStorageLocation);
-        // Update the file path to use the API URL instead of filesystem path
-        String apiPath = "/api/files/thumbnails/" + response.getFileName();
-        return new FileUploadResponse(
-            response.getFileName(),
-            response.getFileType(),
-            apiPath,
-            response.getSize()
-        );
+     */
+    public FileUploadResponse storeThumbnailFile(MultipartFile file) {
+        return storeFile(file, thumbnailStorageLocation);
     }
 
     /**
@@ -134,13 +163,16 @@ public class FileStorageService {
             Path targetLocation = storageLocation.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             
-            String storedPath = targetLocation.toString();
+            // Determine the base 'uploads' directory segment for constructing the web path
+            // storageLocation is like /abs/path/to/uploads/videos or /abs/path/to/uploads/thumbnails
+            String type = storageLocation.getFileName().toString(); // "videos" or "thumbnails"
+            String webPath = "/uploads/" + type + "/" + uniqueFilename;
             
             // Create and return response
             return new FileUploadResponse(
                 uniqueFilename, 
                 file.getContentType(), 
-                storedPath,
+                webPath, // Use the web-accessible relative path
                 file.getSize()
             );
         } catch (IOException ex) {

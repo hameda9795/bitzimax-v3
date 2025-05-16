@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import java.io.IOException;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +29,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/videos")
-public class VideoController {
-
-    private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
+public class VideoController {    private static final Logger logger = LoggerFactory.getLogger(VideoController.class);
 
     private final VideoService videoService;
     private final FileStorageService fileStorageService;
@@ -248,30 +248,124 @@ public class VideoController {
      * @param videoFile the video file
      * @param thumbnailFile the thumbnail image
      * @param videoData JSON string with video metadata
+     * @param userId the authenticated user ID (from auth token)
      * @return the created video DTO
-     */
-    @PostMapping("/upload")
+     */    @PostMapping("/upload")
     public ResponseEntity<?> uploadVideo(
             @RequestParam("videoFile") MultipartFile videoFile,
             @RequestParam("thumbnailFile") MultipartFile thumbnailFile,
-            @RequestParam("videoData") String videoData) {
+            @RequestParam("videoData") String videoData,
+            @RequestHeader(value = "X-User-ID", required = false) Long userId) {
 
         try {
+            logger.info("Starting video upload process");
+            
+            // Log the user ID for debugging
+            logger.info("Request from user ID: {}", userId);
+            
+            // Validate input data
+            if (videoFile.isEmpty()) {
+                return ResponseEntity.badRequest().body("Video file is required");
+            }
+            
+            if (thumbnailFile.isEmpty()) {
+                return ResponseEntity.badRequest().body("Thumbnail file is required");
+            }
+            
+            // Store files
             FileUploadResponse videoResponse = fileStorageService.storeVideoFile(videoFile);
-            FileUploadResponse thumbnailResponse = fileStorageService.storeThumbnailFile(thumbnailFile);
+            FileUploadResponse thumbnailResponse = fileStorageService.storeThumbnailFile(thumbnailFile);            
+            
+            // Parse video data
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+            
+            // Add proper debugging to see what's being received
+            logger.info("Received video data: {}", videoData);
+            
+            // Declare videoDTO before try block to extend its scope
+            VideoDTO videoDTO;
+            try {
+                videoDTO = objectMapper.readValue(videoData, VideoDTO.class);
+                // Update URLs to use full paths
+                videoDTO.setVideoUrl(videoResponse.getFilePath());
+                videoDTO.setThumbnailUrl(thumbnailResponse.getFilePath());
+                // Set the actual video duration
+                videoDTO.setDuration(videoResponse.getDuration());
+            } catch (IOException e) {
+                logger.error("Error parsing JSON: {}", e.getMessage());
+                return ResponseEntity.badRequest().body("Error parsing video data JSON: " + e.getMessage());
+            }
 
-            ObjectMapper objectMapper = new ObjectMapper();            VideoDTO videoDTO = objectMapper.readValue(videoData, VideoDTO.class);
-
-            videoDTO.setVideoUrl(videoResponse.getFilePath());
-            videoDTO.setThumbnailUrl(thumbnailResponse.getFilePath());
+            // Set necessary fields
             videoDTO.setIsVisible(true); // Ensure visibility is set
             videoDTO.setConversionStatus(ConversionStatus.COMPLETED); // Set status to completed
 
+            // Create video
             VideoDTO createdVideo = videoService.createVideo(videoDTO);
-
+            
+            logger.info("Video uploaded successfully: {}", createdVideo.getId());
             return ResponseEntity.ok(createdVideo);
         } catch (Exception e) {
+            logger.error("Error uploading video: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Error uploading video: " + e.getMessage());
         }
+    }
+
+    /**
+     * Track a video share
+     * POST /api/videos/{id}/share
+     * 
+     * @param id the video ID
+     * @return success status
+     */
+    @PostMapping("/{id}/share")
+    public ResponseEntity<Void> trackShare(@PathVariable Long id) {
+        logger.info("Recording share for video with ID: {}", id);
+        
+        Optional<Video> videoOpt = videoService.findVideoById(id);
+        if (!videoOpt.isPresent()) {
+            logger.warn("Attempted to track share for non-existent video: {}", id);
+            return ResponseEntity.notFound().build();
+        }
+        
+        Video video = videoOpt.get();        // Increment share count if it exists, otherwise initialize it
+        if (video.getShareCount() == null) {
+            video.setShareCount(1L);
+        } else {
+            video.setShareCount(video.getShareCount() + 1L);
+        }
+        
+        videoService.saveVideo(video);
+        logger.info("Share tracked successfully for video: {}", id);
+        
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Get related videos for a specific video
+     * GET /videos/{id}/related
+     *
+     * @param id the video ID
+     * @param limit maximum number of related videos to return
+     * @return list of related videos
+     */
+    @GetMapping("/{id}/related")
+    public ResponseEntity<?> getRelatedVideos(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "3") int limit) {
+        logger.info("Fetching related videos for video id: {}, limit: {}", id, limit);
+        
+        Optional<Video> videoOpt = videoService.findVideoById(id);
+        if (videoOpt.isEmpty()) {
+            logger.warn("Video not found with id: {}", id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Video not found");
+        }
+        
+        Video video = videoOpt.get();
+        List<Video> relatedVideos = videoService.findRelatedVideos(video, limit);
+        
+        return ResponseEntity.ok(relatedVideos);
     }
 }

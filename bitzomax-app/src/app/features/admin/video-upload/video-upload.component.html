@@ -137,6 +137,19 @@
               </mat-error>
             </mat-form-field>
             
+            <!-- Genre Selection -->
+            <mat-form-field appearance="fill" class="cyberpunk-field">
+              <mat-label>Genre</mat-label>
+              <mat-select formControlName="genreId">
+                <mat-option [value]="null">None</mat-option>
+                <mat-option *ngFor="let genre of genres" [value]="genre.id">
+                  {{ genre.name }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix>category</mat-icon>
+              <mat-hint>Select a genre for this video</mat-hint>
+            </mat-form-field>
+            
             <!-- Poem Text -->
             <mat-form-field appearance="fill" class="cyberpunk-field full-width">
               <mat-label>Poem Text</mat-label>

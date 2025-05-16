@@ -61,6 +61,10 @@
                     <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                     <span>{{ video.likes }}</span>
                   </button>
+                  <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors" 
+                    aria-label="Share video">
+                    <i class="fas fa-share-alt"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -221,6 +225,10 @@
                   <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                   <span>{{ video.likes }}</span>
                 </button>
+                <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors" 
+                  aria-label="Share video">
+                  <i class="fas fa-share-alt"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -360,7 +368,7 @@
           </h3>
           
           <!-- Related Videos Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             <!-- If no related videos found -->
             <div *ngIf="relatedVideos.length === 0" class="col-span-full py-12 text-center border border-hot-pink rounded-lg bg-deep-purple bg-opacity-30">
               <p class="text-electric-blue text-lg">No related videos found</p>
@@ -369,7 +377,7 @@
             <!-- Related Video Card -->
             <div *ngFor="let relatedVideo of relatedVideos" 
                  class="bg-cyber-black border border-neon-green rounded-lg overflow-hidden hover:border-hot-pink transition-colors cursor-pointer">
-              <div class="aspect-video relative">
+              <div class="aspect-[9/16] relative">
                 <img [src]="relatedVideo.thumbnailUrl" [alt]="relatedVideo.title" class="w-full h-full object-cover">
                 <div class="absolute bottom-2 right-2 bg-cyber-black bg-opacity-80 px-2 py-1 text-xs text-electric-blue rounded">
                   {{ formatDuration(relatedVideo.duration) }}
@@ -399,7 +407,7 @@
       </h3>
       
       <!-- Related Videos Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <!-- If no related videos found -->
         <div *ngIf="relatedVideos.length === 0" class="col-span-full py-12 text-center border border-hot-pink rounded-lg bg-deep-purple bg-opacity-30">
           <p class="text-electric-blue text-lg">No related videos found</p>
@@ -408,7 +416,7 @@
         <!-- Related Video Card -->
         <div *ngFor="let relatedVideo of relatedVideos" 
              class="bg-cyber-black border border-neon-green rounded-lg overflow-hidden hover:border-hot-pink transition-colors cursor-pointer">
-          <div class="aspect-video relative">
+          <div class="aspect-[9/16] relative">
             <img [src]="relatedVideo.thumbnailUrl" [alt]="relatedVideo.title" class="w-full h-full object-cover">
             <div class="absolute bottom-2 right-2 bg-cyber-black bg-opacity-80 px-2 py-1 text-xs text-electric-blue rounded">
               {{ formatDuration(relatedVideo.duration) }}
@@ -429,4 +437,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Share Modal -->
+  <app-share-modal 
+    [video]="video" 
+    [isVisible]="showShareModal"
+    (closed)="closeShareModal()">
+  </app-share-modal>
 </div>

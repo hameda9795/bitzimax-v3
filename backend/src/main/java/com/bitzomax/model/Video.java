@@ -24,7 +24,8 @@ public class Video {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    private Integer duration;    @Column(columnDefinition = "timestamp")
+    private Integer duration;
+
     private LocalDateTime uploadDate;
 
     private Long views;
@@ -54,6 +55,10 @@ public class Video {
     
     @Column(nullable = false, columnDefinition = "boolean default true")
     private Boolean isVisible = true;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "genre_id")
+    private Genre genre;
 
     @ElementCollection
     @CollectionTable(name = "video_tags", joinColumns = @JoinColumn(name = "video_id"))
@@ -248,12 +253,20 @@ public class Video {
     public void setSeoKeywords(Set<String> seoKeywords) {
         this.seoKeywords = seoKeywords;
     }
-    
+
     public Boolean getIsVisible() {
         return isVisible;
     }
-    
+
     public void setIsVisible(Boolean isVisible) {
         this.isVisible = isVisible;
+    }
+    
+    public Genre getGenre() {
+        return genre;
+    }
+
+    public void setGenre(Genre genre) {
+        this.genre = genre;
     }
 }

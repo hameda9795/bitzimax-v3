@@ -1,3 +1,5 @@
+import { Genre } from './genre.model';
+
 /**
  * Video model interface for the Bitzomax platform
  */
@@ -12,7 +14,10 @@ export interface Video {
   likes: number;
   isPremium: boolean;
   uploadDate: Date;
-  tags: string[];
+  tags?: string[];
+  commentCount: number;
+  shareCount: number;
+  isVisible: boolean;
   
   // Additional fields for admin panel
   poemText?: string;       // Poem text associated with the video
@@ -21,10 +26,9 @@ export interface Video {
   seoDescription?: string; // SEO optimized description
   seoKeywords?: string[];  // SEO keywords
   originalFormat?: string; // Original video format before conversion
-  conversionStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  conversionStatus?: string;
   engagementRate?: number; // Calculated engagement metric
-  commentCount?: number;   // Number of comments
-  shareCount?: number;     // Number of shares
+  genre?: Genre;
 }
 
 /**
@@ -52,4 +56,21 @@ export interface VideoComment {
   content: string;
   timestamp: Date;
   likes: number;
+}
+
+export interface VideoUploadResponse {
+  success: boolean;
+  message: string;
+  video?: Video;
+}
+
+export interface VideoSearchParams {
+  page: number;
+  size: number;
+  sort: string;
+  direction: string;
+  query?: string;
+  genre?: string;
+  tags?: string[];
+  isPremium?: boolean;
 }
