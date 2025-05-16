@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Fixer Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .card {
+            background: white;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stat-box {
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        img.thumbnail {
+            max-width: 100px;
+            max-height: 60px;
+            object-fit: cover;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Video Fixer Tool</h1>
+        <p>This tool helps diagnose and fix issues with videos in the Bitzomax system.</p>
+        
+        <div class="card">
+            <h2>Quick Fix Actions</h2>
+            <div class="buttons">
+                <button id="fixAllBtn">Fix All Issues</button>
+                <button id="fixThumbnailsBtn">Fix Thumbnails</button>
+                <button id="fixDatesBtn">Fix Invalid Dates</button>
+                <button id="statusBtn">Check Status</button>
+            </div>
+            <div id="loader" class="loader"></div>
+            <div id="statusMessage" class="hidden"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Video Status</h2>
+            <div class="stats" id="stats">
+                <div class="stat-box">
+                    <div>Total Videos</div>
+                    <div class="stat-number" id="totalVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Visible Videos</div>
+                    <div class="stat-number" id="visibleVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Hidden Videos</div>
+                    <div class="stat-number" id="invisibleVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Completed Videos</div>
+                    <div class="stat-number" id="completedVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Pending Videos</div>
+                    <div class="stat-number" id="pendingVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Failed Videos</div>
+                    <div class="stat-number" id="failedVideos">-</div>
+                </div>
+                <div class="stat-box">
+                    <div>Videos with Null Date</div>
+                    <div class="stat-number" id="nullDateVideos">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Video Details</h2>
+            <div class="table-container">
+                <table id="videoTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Visible</th>
+                            <th>Status</th>
+                            <th>Upload Date</th>
+                            <th>Thumbnail</th>
+                            <th>Video URL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="videoTableBody">
+                        <!-- Videos will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusBtn = document.getElementById('statusBtn');
+            const fixAllBtn = document.getElementById('fixAllBtn');
+            const fixThumbnailsBtn = document.getElementById('fixThumbnailsBtn');
+            const fixDatesBtn = document.getElementById('fixDatesBtn');
+            const loader = document.getElementById('loader');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Initialize by checking status
+            checkStatus();
+            
+            statusBtn.addEventListener('click', checkStatus);
+            fixAllBtn.addEventListener('click', fixAll);
+            fixThumbnailsBtn.addEventListener('click', fixThumbnails);
+            fixDatesBtn.addEventListener('click', fixDates);
+            
+            // Function to check video status
+            async function checkStatus() {
+                showLoader();
+                statusMessage.textContent = '';
+                statusMessage.classList.add('hidden');
+                
+                try {
+                    const response = await fetch('/api/fix-videos/status');
+                    const data = await response.json();
+                    
+                    // Update stats
+                    document.getElementById('totalVideos').textContent = data.totalVideos || 0;
+                    document.getElementById('visibleVideos').textContent = data.visibleVideos || 0;
+                    document.getElementById('invisibleVideos').textContent = data.invisibleVideos || 0;
+                    document.getElementById('completedVideos').textContent = data.completedVideos || 0;
+                    document.getElementById('pendingVideos').textContent = data.pendingVideos || 0;
+                    document.getElementById('failedVideos').textContent = data.failedVideos || 0;
+                    document.getElementById('nullDateVideos').textContent = data.nullDateVideos || 0;
+                    
+                    // Update video table
+                    const tableBody = document.getElementById('videoTableBody');
+                    tableBody.innerHTML = '';
+                    
+                    if (data.videos && data.videos.length > 0) {
+                        data.videos.forEach(video => {
+                            const row = document.createElement('tr');
+                            
+                            const formatDate = (dateStr) => {
+                                if (!dateStr) return 'N/A';
+                                try {
+                                    const date = new Date(dateStr);
+                                    return date.toLocaleString();
+                                } catch (e) {
+                                    return 'Invalid Date';
+                                }
+                            };
+                            
+                            row.innerHTML = `
+                                <td>${video.id || 'N/A'}</td>
+                                <td>${video.title || 'Untitled'}</td>
+                                <td>${video.visible === true ? 'Yes' : 'No'}</td>
+                                <td>${video.status || 'Unknown'}</td>
+                                <td>${formatDate(video.uploadDate)}</td>
+                                <td>
+                                    ${video.thumbnailUrl ? 
+                                        `<img src="${video.thumbnailUrl}" alt="Thumbnail" class="thumbnail" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iNjAiIGZpbGw9IiNlZWUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5Ij5ObyBJbWFnZTwvdGV4dD48L3N2Zz4='" />` : 
+                                        'No thumbnail'
+                                    }
+                                </td>
+                                <td>${video.videoUrl || 'N/A'}</td>
+                            `;
+                            
+                            tableBody.appendChild(row);
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="7">No videos found</td></tr>';
+                    }
+                } catch (error) {
+                    showError(`Error checking status: ${error.message}`);
+                } finally {
+                    hideLoader();
+                }
+            }
+            
+            // Function to fix all issues
+            async function fixAll() {
+                showLoader();
+                statusMessage.textContent = '';
+                statusMessage.classList.add('hidden');
+                
+                try {
+                    const response = await fetch('/api/fix-videos/fix-all', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    showSuccess(`${data.message}`);
+                    
+                    // Refresh status
+                    setTimeout(checkStatus, 1000);
+                } catch (error) {
+                    showError(`Error fixing videos: ${error.message}`);
+                } finally {
+                    hideLoader();
+                }
+            }
+            
+            // Function to fix thumbnails
+            async function fixThumbnails() {
+                showLoader();
+                statusMessage.textContent = '';
+                statusMessage.classList.add('hidden');
+                
+                try {
+                    const response = await fetch('/api/fix-videos/fix-thumbnails', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    showSuccess(`${data.message}`);
+                    
+                    // Refresh status
+                    setTimeout(checkStatus, 1000);
+                } catch (error) {
+                    showError(`Error fixing thumbnails: ${error.message}`);
+                } finally {
+                    hideLoader();
+                }
+            }
+            
+            // Function to fix dates
+            async function fixDates() {
+                showLoader();
+                statusMessage.textContent = '';
+                statusMessage.classList.add('hidden');
+                
+                try {
+                    const response = await fetch('/api/fix-videos/fix-dates', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    showSuccess(`${data.message}`);
+                    
+                    // Refresh status
+                    setTimeout(checkStatus, 1000);
+                } catch (error) {
+                    showError(`Error fixing dates: ${error.message}`);
+                } finally {
+                    hideLoader();
+                }
+            }
+            
+            // Helper functions
+            function showLoader() {
+                loader.style.display = 'block';
+            }
+            
+            function hideLoader() {
+                loader.style.display = 'none';
+            }
+            
+            function showSuccess(message) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'success';
+                statusMessage.classList.remove('hidden');
+            }
+            
+            function showError(message) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'error';
+                statusMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

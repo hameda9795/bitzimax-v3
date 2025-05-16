@@ -202,10 +202,12 @@
           </tr>
         </table>
       </div>
-      
-      <!-- Pagination -->
+        <!-- Pagination -->
       <mat-paginator 
-        [pageSizeOptions]="[10, 25, 50]"
+        [length]="totalVideos"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="pageSizeOptions"
         showFirstLastButtons
         class="cyberpunk-paginator">
       </mat-paginator>

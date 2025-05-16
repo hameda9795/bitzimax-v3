@@ -1,100 +1,432 @@
-<div class="container mx-auto py-8" *ngIf="video">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <!-- Main Video Section -->
-    <div class="md:col-span-2">
-      <div class="video-container border-2 border-hot-pink rounded-lg overflow-hidden shadow-hot-pink">
-        <video #videoPlayer class="w-full h-full object-cover" [poster]="video.thumbnailUrl" (timeupdate)="checkVideoTime()">
-          <source [src]="video.videoUrl" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        
-        <!-- Subscription Overlay (shown after 30 seconds for non-subscribers) -->
-        <div *ngIf="showSubscriptionBanner" class="absolute inset-0 flex flex-col items-center justify-center bg-deep-purple bg-opacity-90 p-6 text-center">
-          <h3 class="text-2xl font-bold text-neon-green mb-4 glitch-text">Premium Content</h3>
-          <p class="text-electric-blue mb-6">Subscribe to continue watching this premium video and unlock our entire content library.</p>
-          <button (click)="subscribe()" class="cyber-button text-lg py-3 px-8">
-            Subscribe Now <span class="ml-1">€6/mo</span>
-          </button>
-          <p class="text-hot-pink mt-4">No contracts. Cancel anytime.</p>
-        </div>
-        
-        <!-- Video Controls -->
-        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-cyber-black p-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-              <button (click)="togglePlayPause()" class="text-neon-green hover:text-hot-pink transition-colors" [attr.aria-label]="isPlaying ? 'Pause video' : 'Play video'" title="Play/Pause video">
-                <i class="fas" [ngClass]="isPlaying ? 'fa-pause' : 'fa-play'"></i>
-              </button>
-              <div class="text-electric-blue">{{ formatDuration(currentTime) }} / {{ formatDuration(video.duration) }}</div>
+<div class="min-h-screen grid-bg relative">
+  <!-- Loading state -->
+  <div *ngIf="!video" class="container mx-auto h-screen flex items-center justify-center">
+    <div class="w-64 text-center">
+      <h2 class="text-2xl text-hot-pink mb-4 glitch-text">Loading Video</h2>
+      <div class="h-1 w-full bg-deep-purple rounded overflow-hidden">
+        <div class="h-full bg-neon-green animate-pulse" style="width: 75%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Content -->
+  <div *ngIf="video" class="w-full h-full">
+    <!-- Mobile/Tablet Layout (Full width video) -->
+    <div class="lg:hidden">
+      <!-- Video Player (Mobile) -->
+      <div class="sticky top-0 z-10 bg-cyber-black">
+        <div class="relative overflow-hidden shadow-hot-pink border border-hot-pink">
+          <!-- Video Player -->
+          <div class="video-container vertical-video">
+            <video #videoPlayer 
+                   class="w-full h-full" 
+                   [poster]="video.thumbnailUrl" 
+                   (timeupdate)="checkVideoTime()"
+                   (click)="togglePlayPause()"
+                   preload="auto">
+              <source [src]="video.videoUrl" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+            
+            <!-- Play Indicator (shows briefly when video is clicked) -->
+            <div *ngIf="isPlaying" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div class="bg-hot-pink bg-opacity-50 p-4 rounded-full animate-ping-once">
+                <i class="fas fa-play text-xl text-white"></i>
+              </div>
             </div>
-            <div>
-              <button (click)="toggleLike()" class="text-hot-pink hover:text-neon-green transition-colors" [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'" title="Like/Unlike video">
-                <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
-                {{ video.likes }}
-              </button>
+            
+            <!-- Video Controls -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-cyber-black to-transparent">
+              <!-- Progress Bar -->
+              <div class="h-1 bg-deep-purple rounded-full overflow-hidden cursor-pointer mb-2">
+                <div class="bg-hot-pink h-full" [style.width.%]="(currentTime / video.duration) * 100"></div>
+              </div>
+              
+              <div class="flex items-center justify-between">
+                <!-- Left Controls -->
+                <div class="flex items-center space-x-4">
+                  <button (click)="togglePlayPause()" class="text-neon-green hover:text-hot-pink transition-colors text-xl" 
+                    [attr.aria-label]="isPlaying ? 'Pause video' : 'Play video'">
+                    <i class="fas" [ngClass]="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                  </button>
+                  <div class="text-electric-blue text-sm">
+                    {{ formatDuration(currentTime) }} / {{ formatDuration(video.duration) }}
+                  </div>
+                </div>
+                
+                <!-- Right Controls -->
+                <div class="flex items-center space-x-4">
+                  <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors" 
+                    [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
+                    <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
+                    <span>{{ video.likes }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          <!-- Progress Bar -->
-          <div class="mt-2 h-1 bg-deep-purple rounded overflow-hidden">
-            <div class="bg-hot-pink h-full" [style.width.%]="(currentTime / video.duration) * 100"></div>
+            
+            <!-- Subscription Overlay -->
+            <div *ngIf="showSubscriptionBanner" class="absolute inset-0 flex flex-col items-center justify-center bg-deep-purple bg-opacity-90 p-6 text-center">
+              <div class="max-w-md mx-auto">
+                <h3 class="text-3xl font-bold text-neon-green mb-6 glitch-text">Premium Content</h3>
+                <p class="text-electric-blue mb-8 text-lg">Subscribe to continue watching this premium video and unlock our entire content library.</p>
+                <button (click)="subscribe()" class="cyber-button text-lg py-3 px-8 mb-6 transform hover:scale-105 transition-transform">
+                  Subscribe Now <span class="ml-1">€6/mo</span>
+                </button>
+                <p class="text-hot-pink text-sm">No contracts. Cancel anytime.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
-      <!-- Video Info -->
-      <div class="mt-4 p-4 bg-cyber-black bg-opacity-60 border border-electric-blue rounded-lg">
-        <h1 class="text-2xl font-bold text-electric-blue mb-2">{{ video.title }}</h1>
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-neon-green">{{ video.views | number }} views</span>
-          <span *ngIf="video.isPremium" class="text-hot-pink font-bold">PREMIUM</span>
+      <!-- Scrollable Content -->
+      <div class="px-4 py-6">
+        <!-- Video Info Card -->
+        <div class="bg-cyber-black bg-opacity-60 border border-electric-blue p-6 rounded-lg mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <h1 class="text-2xl font-bold text-electric-blue">{{ video.title }}</h1>
+            <span *ngIf="video.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
+          </div>
+          
+          <div class="flex items-center text-sm text-neon-green mb-4">
+            <span>{{ video.views | number }} views</span>
+            <span class="mx-2">•</span>
+            <span>{{ video.uploadDate | date }}</span>
+          </div>
+          
+          <p class="text-white mb-6">{{ video.description }}</p>
+          
+          <!-- Tags -->
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span *ngFor="let tag of video.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
+              #{{ tag }}
+            </span>
+          </div>
         </div>
-        <p class="text-white">
-          {{ video.description }}
-        </p>
-        <div class="mt-4 flex flex-wrap gap-2">
-          <span *ngFor="let tag of video.tags" class="bg-deep-purple px-2 py-1 rounded text-electric-blue text-xs">
-            #{{ tag }}
-          </span>
+        
+        <!-- SEO & Extended Metadata -->
+        <div class="bg-cyber-black border border-neon-green p-6 rounded-lg mb-6">
+          <h3 class="text-neon-green font-bold mb-4 pb-2 border-b border-neon-green">Video Details</h3>
+          
+          <!-- Poem Text if available -->
+          <div *ngIf="video.poemText" class="mb-6">
+            <h4 class="text-hot-pink mb-2 font-bold">Poem</h4>
+            <p class="text-electric-blue italic whitespace-pre-line">{{ video.poemText }}</p>
+          </div>
+          
+          <!-- SEO Info -->
+          <div *ngIf="video.seoTitle || video.seoDescription || video.seoKeywords?.length" class="space-y-4">
+            <div *ngIf="video.seoTitle">
+              <h4 class="text-white font-semibold">SEO Title</h4>
+              <p class="text-electric-blue">{{ video.seoTitle }}</p>
+            </div>
+            
+            <div *ngIf="video.seoDescription">
+              <h4 class="text-white font-semibold">SEO Description</h4>
+              <p class="text-electric-blue">{{ video.seoDescription }}</p>
+            </div>
+            
+            <div *ngIf="video.seoKeywords?.length">
+              <h4 class="text-white font-semibold">SEO Keywords</h4>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <span *ngFor="let keyword of video.seoKeywords" class="bg-deep-purple px-2 py-1 rounded text-electric-blue text-xs">
+                  {{ keyword }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hashtags -->
+          <div *ngIf="video.hashtags?.length" class="mt-6">
+            <h4 class="text-white font-semibold mb-2">Hashtags</h4>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let hashtag of video.hashtags" class="bg-hot-pink bg-opacity-20 px-3 py-1 rounded-full text-hot-pink text-xs">
+                #{{ hashtag }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Technical Info -->
+          <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+            <div *ngIf="video.originalFormat">
+              <span class="text-white">Format:</span>
+              <span class="text-electric-blue ml-2">{{ video.originalFormat }}</span>
+            </div>
+            
+            <div>
+              <span class="text-white">Duration:</span>
+              <span class="text-electric-blue ml-2">{{ formatDuration(video.duration) }}</span>
+            </div>
+            
+            <div *ngIf="video.engagementRate">
+              <span class="text-white">Engagement:</span>
+              <span class="text-electric-blue ml-2">{{ video.engagementRate | percent }}</span>
+            </div>
+            
+            <div *ngIf="video.conversionStatus">
+              <span class="text-white">Status:</span>
+              <span class="text-electric-blue ml-2 capitalize">{{ video.conversionStatus }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     
-    <!-- Related Videos Sidebar -->
-    <div class="md:col-span-1">
-      <h3 class="text-xl font-bold text-hot-pink mb-4 border-l-4 border-hot-pink pl-4">
-        Related Videos
-      </h3>
-      <div class="space-y-4">
-        <!-- Related Video Items -->
-        <div *ngFor="let relatedVideo of relatedVideos" class="flex border border-neon-green rounded-lg overflow-hidden bg-cyber-black">
-          <div class="w-1/3 aspect-[9/16] relative">
-            <img [src]="relatedVideo.thumbnailUrl" [alt]="relatedVideo.title" title="Video thumbnail" class="w-full h-full object-cover">
+    <!-- Desktop Layout (Side by Side) -->
+    <div class="hidden lg:flex w-full">
+      <!-- Left side (Video) -->
+      <div class="video-fixed-container border border-hot-pink shadow-hot-pink">
+        <div class="video-container vertical-video">
+          <video #videoPlayer 
+                 class="w-full h-full" 
+                 [poster]="video.thumbnailUrl" 
+                 (timeupdate)="checkVideoTime()"
+                 (click)="togglePlayPause()"
+                 preload="auto">
+            <source [src]="video.videoUrl" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          
+          <!-- Play Indicator (shows briefly when video is clicked) -->
+          <div *ngIf="isPlaying" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="bg-hot-pink bg-opacity-50 p-4 rounded-full animate-ping-once">
+              <i class="fas fa-play text-xl text-white"></i>
+            </div>
           </div>
-          <div class="w-2/3 p-3">
-            <h4 class="text-electric-blue font-bold line-clamp-2">{{ relatedVideo.title }}</h4>
-            <p class="text-white text-xs line-clamp-1">{{ relatedVideo.description }}</p>
-            <div class="flex justify-between mt-2 text-xs">
-              <span class="text-neon-green">{{ relatedVideo.views | number }} views</span>
-              <span *ngIf="relatedVideo.isPremium" class="text-hot-pink">Premium</span>
+          
+          <!-- Video Controls -->
+          <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-cyber-black to-transparent">
+            <!-- Progress Bar -->
+            <div class="h-1 bg-deep-purple rounded-full overflow-hidden cursor-pointer mb-2">
+              <div class="bg-hot-pink h-full" [style.width.%]="(currentTime / video.duration) * 100"></div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <!-- Left Controls -->
+              <div class="flex items-center space-x-4">
+                <button (click)="togglePlayPause()" class="text-neon-green hover:text-hot-pink transition-colors text-xl" 
+                  [attr.aria-label]="isPlaying ? 'Pause video' : 'Play video'">
+                  <i class="fas" [ngClass]="isPlaying ? 'fa-pause' : 'fa-play'"></i>
+                </button>
+                <div class="text-electric-blue text-sm">
+                  {{ formatDuration(currentTime) }} / {{ formatDuration(video.duration) }}
+                </div>
+              </div>
+              
+              <!-- Right Controls -->
+              <div class="flex items-center space-x-4">
+                <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors" 
+                  [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
+                  <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
+                  <span>{{ video.likes }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Subscription Overlay -->
+          <div *ngIf="showSubscriptionBanner" class="absolute inset-0 flex flex-col items-center justify-center bg-deep-purple bg-opacity-90 p-6 text-center">
+            <div class="max-w-md mx-auto">
+              <h3 class="text-3xl font-bold text-neon-green mb-6 glitch-text">Premium Content</h3>
+              <p class="text-electric-blue mb-8 text-lg">Subscribe to continue watching this premium video and unlock our entire content library.</p>
+              <button (click)="subscribe()" class="cyber-button text-lg py-3 px-8 mb-6 transform hover:scale-105 transition-transform">
+                Subscribe Now <span class="ml-1">€6/mo</span>
+              </button>
+              <p class="text-hot-pink text-sm">No contracts. Cancel anytime.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right side (Content) -->
+      <div class="video-content-container overflow-y-auto px-6 py-6">
+        <!-- Main Info Card -->
+        <div class="bg-cyber-black bg-opacity-60 border border-electric-blue p-6 rounded-lg mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <h1 class="text-3xl font-bold text-electric-blue">{{ video.title }}</h1>
+            <span *ngIf="video.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
+          </div>
+          
+          <div class="flex items-center text-sm text-neon-green mb-4">
+            <span>{{ video.views | number }} views</span>
+            <span class="mx-2">•</span>
+            <span>{{ video.uploadDate | date }}</span>
+            <span *ngIf="video.commentCount" class="mx-2">•</span>
+            <span *ngIf="video.commentCount">{{ video.commentCount }} comments</span>
+          </div>
+          
+          <p class="text-white mb-6">{{ video.description }}</p>
+          
+          <!-- Tags -->
+          <div class="mt-4 flex flex-wrap gap-2">
+            <span *ngFor="let tag of video.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
+              #{{ tag }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- Poem Text if available -->
+        <div *ngIf="video.poemText" class="bg-deep-purple bg-opacity-40 border-l-4 border-hot-pink p-6 rounded-lg mb-6">
+          <h4 class="text-hot-pink mb-2 font-bold">Poem</h4>
+          <p class="text-electric-blue italic whitespace-pre-line">{{ video.poemText }}</p>
+        </div>
+        
+        <!-- SEO Metadata -->
+        <div *ngIf="video.seoTitle || video.seoDescription || video.seoKeywords?.length" class="bg-cyber-black border border-neon-green p-6 rounded-lg mb-6">
+          <h3 class="text-neon-green font-bold mb-4 pb-2 border-b border-neon-green">SEO Information</h3>
+          
+          <div class="space-y-4">
+            <div *ngIf="video.seoTitle">
+              <h4 class="text-white font-semibold">SEO Title</h4>
+              <p class="text-electric-blue">{{ video.seoTitle }}</p>
+            </div>
+            
+            <div *ngIf="video.seoDescription">
+              <h4 class="text-white font-semibold">SEO Description</h4>
+              <p class="text-electric-blue">{{ video.seoDescription }}</p>
+            </div>
+            
+            <div *ngIf="video.seoKeywords?.length">
+              <h4 class="text-white font-semibold">SEO Keywords</h4>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <span *ngFor="let keyword of video.seoKeywords" class="bg-deep-purple px-2 py-1 rounded text-electric-blue text-xs">
+                  {{ keyword }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
         
-        <!-- If no related videos are found -->
-        <div *ngIf="relatedVideos.length === 0" class="border border-hot-pink rounded-lg p-4 bg-deep-purple bg-opacity-30">
-          <p class="text-electric-blue text-center">No related videos found</p>
+        <!-- Additional Metadata -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Hashtags -->
+          <div *ngIf="video.hashtags?.length" class="bg-cyber-black bg-opacity-60 p-6 rounded-lg border border-hot-pink">
+            <h4 class="text-hot-pink font-bold mb-4">Hashtags</h4>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let hashtag of video.hashtags" class="bg-hot-pink bg-opacity-20 px-3 py-1 rounded-full text-hot-pink text-xs hover:bg-hot-pink hover:text-white transition-colors">
+                #{{ hashtag }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Stats Card -->
+          <div class="bg-cyber-black border border-electric-blue p-6 rounded-lg">
+            <h4 class="text-electric-blue font-bold mb-4 pb-2 border-b border-electric-blue">Video Stats</h4>
+            
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-white">Views</span>
+                <span class="text-neon-green font-mono">{{ video.views | number }}</span>
+              </div>
+              
+              <div class="flex justify-between">
+                <span class="text-white">Likes</span>
+                <span class="text-hot-pink font-mono">{{ video.likes | number }}</span>
+              </div>
+              
+              <div *ngIf="video.commentCount" class="flex justify-between">
+                <span class="text-white">Comments</span>
+                <span class="text-electric-blue font-mono">{{ video.commentCount | number }}</span>
+              </div>
+              
+              <div *ngIf="video.shareCount" class="flex justify-between">
+                <span class="text-white">Shares</span>
+                <span class="text-electric-blue font-mono">{{ video.shareCount | number }}</span>
+              </div>
+              
+              <div *ngIf="video.engagementRate" class="flex justify-between">
+                <span class="text-white">Engagement</span>
+                <span class="text-neon-green font-mono">{{ video.engagementRate | percent }}</span>
+              </div>
+              
+              <div class="flex justify-between">
+                <span class="text-white">Format</span>
+                <span class="text-electric-blue font-mono">{{ video.originalFormat || 'vertical' }}</span>
+              </div>
+              
+              <div *ngIf="video.conversionStatus" class="flex justify-between">
+                <span class="text-white">Status</span>
+                <span class="text-electric-blue font-mono capitalize">{{ video.conversionStatus }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Related Videos -->
+        <div class="mt-10">
+          <h3 class="text-xl font-bold text-hot-pink mb-6 border-l-4 border-hot-pink pl-4">
+            Related Videos
+          </h3>
+          
+          <!-- Related Videos Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- If no related videos found -->
+            <div *ngIf="relatedVideos.length === 0" class="col-span-full py-12 text-center border border-hot-pink rounded-lg bg-deep-purple bg-opacity-30">
+              <p class="text-electric-blue text-lg">No related videos found</p>
+            </div>
+            
+            <!-- Related Video Card -->
+            <div *ngFor="let relatedVideo of relatedVideos" 
+                 class="bg-cyber-black border border-neon-green rounded-lg overflow-hidden hover:border-hot-pink transition-colors cursor-pointer">
+              <div class="aspect-video relative">
+                <img [src]="relatedVideo.thumbnailUrl" [alt]="relatedVideo.title" class="w-full h-full object-cover">
+                <div class="absolute bottom-2 right-2 bg-cyber-black bg-opacity-80 px-2 py-1 text-xs text-electric-blue rounded">
+                  {{ formatDuration(relatedVideo.duration) }}
+                </div>
+                <div *ngIf="relatedVideo.isPremium" class="absolute top-2 right-2 bg-hot-pink px-2 py-1 text-xs text-white rounded">
+                  PREMIUM
+                </div>
+              </div>
+              
+              <div class="p-4">
+                <h4 class="text-electric-blue font-bold line-clamp-2 mb-2">{{ relatedVideo.title }}</h4>
+                <div class="flex justify-between text-xs">
+                  <span class="text-neon-green">{{ relatedVideo.views | number }} views</span>
+                  <span class="text-hot-pink">{{ relatedVideo.likes }} likes</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Loading state -->
-<div *ngIf="!video" class="container mx-auto py-8 text-center">
-  <div class="cyber-grid h-64 flex flex-col items-center justify-center">
-    <h2 class="text-2xl text-hot-pink mb-4">Loading video...</h2>
-    <div class="w-24 h-1 bg-deep-purple">
-      <div class="bg-neon-green h-full animate-pulse"></div>
+    
+    <!-- Related Videos (Mobile only) -->
+    <div class="lg:hidden px-4 mt-6 mb-12">
+      <h3 class="text-xl font-bold text-hot-pink mb-6 border-l-4 border-hot-pink pl-4">
+        Related Videos
+      </h3>
+      
+      <!-- Related Videos Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- If no related videos found -->
+        <div *ngIf="relatedVideos.length === 0" class="col-span-full py-12 text-center border border-hot-pink rounded-lg bg-deep-purple bg-opacity-30">
+          <p class="text-electric-blue text-lg">No related videos found</p>
+        </div>
+        
+        <!-- Related Video Card -->
+        <div *ngFor="let relatedVideo of relatedVideos" 
+             class="bg-cyber-black border border-neon-green rounded-lg overflow-hidden hover:border-hot-pink transition-colors cursor-pointer">
+          <div class="aspect-video relative">
+            <img [src]="relatedVideo.thumbnailUrl" [alt]="relatedVideo.title" class="w-full h-full object-cover">
+            <div class="absolute bottom-2 right-2 bg-cyber-black bg-opacity-80 px-2 py-1 text-xs text-electric-blue rounded">
+              {{ formatDuration(relatedVideo.duration) }}
+            </div>
+            <div *ngIf="relatedVideo.isPremium" class="absolute top-2 right-2 bg-hot-pink px-2 py-1 text-xs text-white rounded">
+              PREMIUM
+            </div>
+          </div>
+          
+          <div class="p-4">
+            <h4 class="text-electric-blue font-bold line-clamp-2 mb-2">{{ relatedVideo.title }}</h4>
+            <div class="flex justify-between text-xs">
+              <span class="text-neon-green">{{ relatedVideo.views | number }} views</span>
+              <span class="text-hot-pink">{{ relatedVideo.likes }} likes</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

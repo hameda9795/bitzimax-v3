@@ -1,8 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -10,9 +10,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SelectionModel } from '@angular/cdk/collections';
 import { Router, RouterLink } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 import { VideoService } from '../../../core/services/video.service';
 import { Video } from '../../../shared/models/video.model';
+import { PageRequest, PageResponse } from '../../../shared/models/pagination.model';
 
 @Component({
   selector: 'app-video-management',
@@ -31,7 +33,7 @@ import { Video } from '../../../shared/models/video.model';
     RouterLink
   ]
 })
-export class VideoManagementComponent implements OnInit {
+export class VideoManagementComponent implements OnInit, OnDestroy {
   displayedColumns: string[] = [
     'select', 'thumbnail', 'title', 'uploadDate', 'views', 
     'likes', 'premium', 'actions'
@@ -42,6 +44,17 @@ export class VideoManagementComponent implements OnInit {
   totalVideos = 0;
   selectedFilter = 'all';
   searchQuery = '';
+  
+  // Pagination parameters
+  pageSize = 10;
+  pageIndex = 0;
+  pageSizeOptions = [5, 10, 25, 50];
+  
+  // Used for server-side pagination
+  currentPageResponse: PageResponse<Video> | null = null;
+  
+  // Subject for handling unsubscribe on destroy
+  private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -51,90 +64,155 @@ export class VideoManagementComponent implements OnInit {
     private dialog: MatDialog,
     private router: Router
   ) { }
-
   ngOnInit(): void {
     this.loadVideos();
   }
+  
+  ngOnDestroy(): void {
+    // Clean up subscriptions when the component is destroyed
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-
-    // Custom sort for date objects
-    this.dataSource.sortingDataAccessor = (item: Video, property) => {
-      switch (property) {
-        case 'uploadDate':
-          return new Date(item.uploadDate).getTime();
-        default:
-          return (item as any)[property];
-      }
-    };
+    // Subscribe to paginator page changes
+    this.paginator.page
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((pageEvent: PageEvent) => {
+        this.pageIndex = pageEvent.pageIndex;
+        this.pageSize = pageEvent.pageSize;
+        this.loadVideos();
+      });
+      
+    // Subscribe to sort changes
+    this.sort.sortChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((sort: Sort) => {
+        // Reset to first page when sorting changes
+        this.pageIndex = 0;
+        if (this.paginator) {
+          this.paginator.pageIndex = 0;
+        }
+        this.loadVideos(sort.active, sort.direction);
+      });
   }
 
-  loadVideos() {
+  loadVideos(sortField?: string, sortDirection?: 'asc' | 'desc' | '') {
     this.isLoading = true;
-
-    // In a real app, this would call your API with filters
-    // For now, we'll generate mock data
-    setTimeout(() => {
-      this.generateMockVideos();
-      this.isLoading = false;
-      this.totalVideos = this.dataSource.data.length;
-    }, 800);
+    
+    // Create page request with current pagination, sorting and filtering
+    const pageRequest: PageRequest = {
+      page: this.pageIndex,
+      size: this.pageSize
+    };
+    
+    // Add sorting if specified
+    if (sortField && sortDirection) {
+      pageRequest.sort = sortField;
+      pageRequest.direction = sortDirection as 'asc' | 'desc';
+    }
+    
+    // Add search filter if any
+    if (this.searchQuery) {
+      pageRequest.filter = this.searchQuery;
+    }
+    
+    // Add type filter if not "all"
+    if (this.selectedFilter !== 'all') {
+      pageRequest.filterType = this.selectedFilter;
+    }
+    
+    // Call API with the page request
+    this.videoService.getVideos(pageRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (page: PageResponse<Video>) => {
+          this.currentPageResponse = page;
+          this.dataSource.data = page.content;
+          this.totalVideos = page.totalElements;
+          this.isLoading = false;
+          
+          // Reset selection when loading new data
+          this.selection.clear();
+        },
+        error: (error) => {
+          console.error('Error loading videos:', error);
+          this.isLoading = false;
+          this.dataSource.data = [];
+          this.totalVideos = 0;
+          alert('Failed to load videos. Please try again.');
+        }
+      });
   }
-
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.searchQuery = filterValue.trim().toLowerCase();
-    this.dataSource.filter = this.searchQuery;
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+    
+    // Reset to first page when filtering
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
     }
+    
+    // Reload data with the filter
+    this.loadVideos();
   }
 
   filterByType(filter: string) {
     this.selectedFilter = filter;
     
-    this.dataSource.filterPredicate = (data: Video, filter: string) => {
-      const searchFilter = this.searchQuery.trim().toLowerCase();
-      const searchMatch = data.title.toLowerCase().includes(searchFilter) || 
-                         data.description.toLowerCase().includes(searchFilter);
-                         
-      if (this.selectedFilter === 'all') {
-        return searchMatch;
-      } else if (this.selectedFilter === 'premium') {
-        return data.isPremium && searchMatch;
-      } else {
-        return !data.isPremium && searchMatch;
-      }
-    };
+    // Reset to first page when changing filter type
+    this.pageIndex = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
     
-    this.dataSource.filter = this.searchQuery; // Trigger filtering
+    // Reload data with the new filter type
+    this.loadVideos();
   }
-
   togglePremium(video: Video) {
-    video.isPremium = !video.isPremium;
+    const newPremiumStatus = !video.isPremium;
     
-    // In a real app, call your API to update the video
-    console.log(`Set video ${video.id} premium status to: ${video.isPremium}`);
+    this.videoService.updatePremiumStatus(video.id, newPremiumStatus)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (success) => {
+          if (success) {
+            // Update local data if successful
+            video.isPremium = newPremiumStatus;
+          } else {
+            alert('Failed to update premium status. Please try again.');
+          }
+        },
+        error: (error) => {
+          console.error('Error updating premium status:', error);
+          alert('Failed to update premium status. Please try again.');
+        }
+      });
   }
 
   deleteVideo(video: Video) {
     if (confirm(`Are you sure you want to delete "${video.title}"?`)) {
-      // In a real app, call your API to delete the video
-      // For now, we'll just remove it from the local data
-      this.dataSource.data = this.dataSource.data.filter(v => v.id !== video.id);
-      this.totalVideos = this.dataSource.data.length;
-      
-      console.log(`Deleted video: ${video.id}`);
+      this.videoService.deleteVideo(video.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (success) => {
+            if (success) {
+              // Refresh the video list after successful deletion
+              this.loadVideos();
+            } else {
+              alert('Failed to delete video. Please try again.');
+            }
+          },
+          error: (error) => {
+            console.error('Error deleting video:', error);
+            alert('Failed to delete video. Please try again.');
+          }
+        });
     }
   }
 
   editVideo(video: Video) {
-    // In a real app, navigate to the edit page for this video
-    console.log(`Editing video: ${video.id}`);
-    
     // Navigate to upload component with video ID param for editing
     this.router.navigate(['/admin/upload'], { queryParams: { edit: video.id } });
   }
@@ -145,13 +223,25 @@ export class VideoManagementComponent implements OnInit {
     }
     
     if (confirm(`Are you sure you want to delete ${this.selection.selected.length} videos?`)) {
-      // In a real app, call your API to bulk delete
       const idsToDelete = this.selection.selected.map(video => video.id);
-      this.dataSource.data = this.dataSource.data.filter(v => !idsToDelete.includes(v.id));
-      this.selection.clear();
-      this.totalVideos = this.dataSource.data.length;
       
-      console.log(`Bulk deleted videos: ${idsToDelete.join(', ')}`);
+      this.videoService.bulkDeleteVideos(idsToDelete)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (success) => {
+            if (success) {
+              // Refresh the video list after successful deletion
+              this.selection.clear();
+              this.loadVideos();
+            } else {
+              alert('Failed to delete videos. Please try again.');
+            }
+          },
+          error: (error) => {
+            console.error('Error bulk deleting videos:', error);
+            alert('Failed to delete videos. Please try again.');
+          }
+        });
     }
   }
 
@@ -160,12 +250,24 @@ export class VideoManagementComponent implements OnInit {
       return;
     }
     
-    // In a real app, call your API to update the videos
-    this.selection.selected.forEach(video => {
-      video.isPremium = makePremium;
-    });
+    const idsToUpdate = this.selection.selected.map(video => video.id);
     
-    console.log(`Set ${this.selection.selected.length} videos to premium: ${makePremium}`);
+    this.videoService.bulkUpdatePremiumStatus(idsToUpdate, makePremium)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (success) => {
+          if (success) {
+            // Refresh the video list after successful update
+            this.loadVideos();
+          } else {
+            alert('Failed to update premium status. Please try again.');
+          }
+        },
+        error: (error) => {
+          console.error('Error bulk updating premium status:', error);
+          alert('Failed to update premium status. Please try again.');
+        }
+      });
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -200,53 +302,6 @@ export class VideoManagementComponent implements OnInit {
     }
     return views.toString();
   }
-
-  // Generate mock video data for demonstration
-  private generateMockVideos() {
-    const videoTitles = [
-      'Night City Dreams', 'Neon Whispers', 'Digital Prophecy',
-      'Chrome Hearts', 'Electric Soul', 'Synthetic Memories',
-      'Virtual Eden', 'Cyber Dawn', 'Quantum Echo',
-      'Binary Sunset', 'Neural Network', 'Hologram Heart',
-      'Digital Rain', 'Ghost in the Machine', 'Silicon Dreams',
-      'Neon Streets', 'Tech Noir', 'Cybernetic Symphony',
-      'Artificial Soul', 'Data Stream'
-    ];
-    
-    const descriptions = [
-      'A journey through the digital landscape of consciousness',
-      'Exploring the boundaries between human and machine',
-      'When synthetic minds dream of electric reality',
-      'The rhythm of artificial hearts in a neon-lit world',
-      'Memories encoded in the fabric of cyberspace'
-    ];
-    
-    const mockVideos: Video[] = [];
-    
-    for (let i = 1; i <= 30; i++) {
-      const randomViews = Math.floor(Math.random() * 200000) + 1000;
-      const randomLikes = Math.floor(randomViews * (Math.random() * 0.3 + 0.05));
-      const randomDate = new Date();
-      randomDate.setDate(randomDate.getDate() - Math.floor(Math.random() * 60));
-      
-      mockVideos.push({
-        id: `video-${i}`,
-        title: videoTitles[Math.floor(Math.random() * videoTitles.length)],
-        description: descriptions[Math.floor(Math.random() * descriptions.length)],
-        thumbnailUrl: `https://via.placeholder.com/320x180/1A1A1A/00F3FF?text=CYBER+VIDEO+${i}`,
-        videoUrl: '#',
-        duration: Math.floor(Math.random() * 300) + 60,
-        views: randomViews,
-        likes: randomLikes,
-        isPremium: Math.random() > 0.7,
-        uploadDate: randomDate,
-        tags: ['cyberpunk', 'future', 'neon'],
-        commentCount: Math.floor(Math.random() * 50),
-        shareCount: Math.floor(Math.random() * 30),
-        engagementRate: Math.random() * 10 + 5
-      });
-    }
-    
-    this.dataSource.data = mockVideos;
-  }
+  // Helper methods for formatting display data
+  // These methods remain client-side since they're just for display
 }

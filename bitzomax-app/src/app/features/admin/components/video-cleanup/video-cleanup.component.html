@@ -1,0 +1,78 @@
+<div class="container mx-auto py-8">
+  <div class="bg-cyber-black bg-opacity-70 p-6 rounded-lg border border-hot-pink shadow-hot-pink mb-8">
+    <h1 class="text-2xl font-bold text-neon-green mb-4">Video Cleanup</h1>
+    <p class="text-electric-blue mb-2">This tool helps you identify and remove sample/test videos from the system.</p>
+    <div class="mt-4 mb-2" *ngIf="message">
+      <div [ngClass]="{
+        'bg-green-100 text-green-800 border-green-500': messageType === 'success',
+        'bg-blue-100 text-blue-800 border-blue-500': messageType === 'info',
+        'bg-yellow-100 text-yellow-800 border-yellow-500': messageType === 'warning',
+        'bg-red-100 text-red-800 border-red-500': messageType === 'error'
+      }" class="p-3 rounded border">
+        {{ message }}
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-cyber-black bg-opacity-60 border border-electric-blue rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-hot-pink">Sample/Test Videos</h2>
+      <div class="flex space-x-4">
+        <button
+          (click)="selectAllVideos()"
+          class="px-4 py-2 bg-deep-purple hover:bg-electric-blue text-white rounded"
+          [disabled]="loading || videos.length === 0">
+          {{ selectedVideos.length === videos.length ? 'Deselect All' : 'Select All' }}
+        </button>
+        <button
+          (click)="deleteSelectedVideos()"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+          [disabled]="loading || selectedVideos.length === 0">
+          Delete Selected ({{ selectedVideos.length }})
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading indicator -->
+    <div *ngIf="loading" class="py-8 text-center">
+      <div class="w-16 h-16 border-4 border-hot-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p class="mt-4 text-electric-blue">Loading videos...</p>
+    </div>
+
+    <!-- No videos found -->
+    <div *ngIf="!loading && videos.length === 0" class="py-8 text-center">
+      <p class="text-white">No sample or test videos found in the system.</p>
+    </div>
+
+    <!-- Video list -->
+    <div *ngIf="!loading && videos.length > 0" class="space-y-4">
+      <div *ngFor="let video of videos" 
+           class="border border-electric-blue rounded-lg p-4 flex items-start"
+           [ngClass]="{'bg-deep-purple bg-opacity-20': selectedVideos.includes(video.id)}">
+        
+        <div class="flex-shrink-0 mr-4">
+          <input 
+            type="checkbox" 
+            [checked]="selectedVideos.includes(video.id)"
+            (change)="toggleSelection(video.id)"
+            class="w-5 h-5">
+        </div>
+        
+        <div class="flex-shrink-0 mr-4 w-32 h-24 relative overflow-hidden rounded border border-electric-blue">
+          <img [src]="'http://localhost:8080' + video.thumbnailUrl" [alt]="video.title" class="object-cover w-full h-full">
+        </div>
+        
+        <div class="flex-grow">
+          <h3 class="text-lg font-semibold text-neon-green">{{ video.title }}</h3>
+          <p class="text-white text-sm mt-1">{{ video.description ? (video.description.length > 100 ? video.description.substring(0, 100) + '...' : video.description) : 'No description' }}</p>
+          <div class="mt-2 flex text-xs text-electric-blue space-x-4">
+            <span>{{ video.uploadDate | date }}</span>
+            <span>{{ video.views }} views</span>
+            <span>{{ video.duration | number }} seconds</span>
+            <span *ngIf="video.isPremium" class="text-hot-pink">Premium</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

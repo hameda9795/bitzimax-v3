@@ -39,7 +39,8 @@ html, body {
   }
   
   .video-container {
-    @apply relative aspect-[9/16] overflow-hidden;
+    @apply relative overflow-hidden;
+    aspect-ratio: 9/16; /* Default aspect ratio, can be overridden in component styles */
   }
 }
 

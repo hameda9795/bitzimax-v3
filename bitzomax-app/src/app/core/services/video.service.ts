@@ -1,197 +1,403 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpParams, HttpRequest } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, throwError, catchError, map, tap } from 'rxjs';
 import { Video } from '../../shared/models/video.model';
+import { PageRequest, PageResponse } from '../../shared/models/pagination.model';
+
+// Backend API response interfaces
+interface VideoResponse {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  duration: number;
+  views: number;
+  likes: number;
+  isPremium: boolean;
+  uploadDate: string;
+  tags: string[];
+  poemText?: string;
+  hashtags?: string[];
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  originalFormat?: string;
+  conversionStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+  engagementRate?: number;
+  commentCount?: number;
+  shareCount?: number;
+}
+
+interface VideoPageResponse {
+  content: VideoResponse[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+interface LikeResponse {
+  success: boolean;
+}
+
+interface UploadProgressInfo {
+  progress: number;
+  status: 'pending' | 'uploading' | 'processing' | 'complete' | 'error';
+  message?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideoService {
-  // Mock videos data
-  private videos: Video[] = [
-    {
-      id: 'v1',
-      title: 'Neon Dystopia',
-      description: 'Experience the dystopian future with this mind-bending visual journey through the streets of Neo-Tokyo.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/00ff9f?text=Neon+Dystopia',
-      videoUrl: 'assets/videos/sample-video-1.mp4',
-      duration: 180, // 3 minutes
-      views: 2400,
-      likes: 243,
-      isPremium: true,
-      uploadDate: new Date('2025-04-15'),
-      tags: ['cyberpunk', 'dystopia', 'neon']
-    },
-    {
-      id: 'v2',
-      title: 'Digital Dreams',
-      description: 'Dive into a world where reality meets digital existence, blurring the lines between what\'s real and what\'s code.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/00e1ff?text=Digital+Dreams',
-      videoUrl: 'assets/videos/sample-video-2.mp4',
-      duration: 225, // 3:45 minutes
-      views: 3800,
-      likes: 517,
-      isPremium: true,
-      uploadDate: new Date('2025-04-20'),
-      tags: ['cyberpunk', 'digital', 'reality']
-    },
-    {
-      id: 'v3',
-      title: 'Synthetic Reality',
-      description: 'When synthetic beings challenge what we know as reality, the line between human and machine becomes increasingly blurred.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/ff0080?text=Synthetic+Reality',
-      videoUrl: 'assets/videos/sample-video-3.mp4',
-      duration: 257, // 4:17 minutes
-      views: 5200,
-      likes: 742,
-      isPremium: true,
-      uploadDate: new Date('2025-05-01'),
-      tags: ['cyberpunk', 'synthetic', 'reality']
-    },
-    {
-      id: 'v4',
-      title: 'Cyber Revolution: Episode 1',
-      description: 'In this episode, we explore the beginnings of the cyber revolution and how it transformed society into the neon-lit dystopia we experience today.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/00ff9f?text=Cyber+Revolution+1',
-      videoUrl: 'assets/videos/sample-video-4.mp4',
-      duration: 360, // 6 minutes
-      views: 24600,
-      likes: 3104,
-      isPremium: true,
-      uploadDate: new Date('2025-03-10'),
-      tags: ['cyberpunk', 'revolution', 'series']
-    },
-    {
-      id: 'v5',
-      title: 'Cyber Revolution: Episode 2',
-      description: 'The rise of artificial intelligence and its impact on society, governance, and human identity.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/00e1ff?text=Cyber+Revolution+2',
-      videoUrl: 'assets/videos/sample-video-5.mp4',
-      duration: 374, // 6:14 minutes
-      views: 12300,
-      likes: 1856,
-      isPremium: true,
-      uploadDate: new Date('2025-03-25'),
-      tags: ['cyberpunk', 'revolution', 'AI', 'series']
-    },
-    {
-      id: 'v6',
-      title: 'Digital Rebellion: The Hackers',
-      description: 'How hackers changed the digital landscape and became the new revolutionaries in a world dominated by megacorporations.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/ff0080?text=Digital+Rebellion',
-      videoUrl: 'assets/videos/sample-video-6.mp4',
-      duration: 298, // 4:58 minutes
-      views: 18500,
-      likes: 2784,
-      isPremium: true,
-      uploadDate: new Date('2025-04-05'),
-      tags: ['cyberpunk', 'hackers', 'digital', 'rebellion']
-    },
-    {
-      id: 'v7',
-      title: 'Neon City Nights',
-      description: 'Experience the cyberpunk nightlife in the heart of Neon City, where danger and excitement lurk around every corner.',
-      thumbnailUrl: 'https://via.placeholder.com/320x640/0a0014/00e1ff?text=Neon+City+Nights',
-      videoUrl: 'assets/videos/sample-video-7.mp4',
-      duration: 245, // 4:05 minutes
-      views: 9700,
-      likes: 1532,
-      isPremium: false, // Free content
-      uploadDate: new Date('2025-05-07'),
-      tags: ['cyberpunk', 'nightlife', 'neon']
-    }
-  ];
-
+  private apiUrl = 'http://localhost:8080/api/videos';
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  public loading$ = this.loadingSubject.asObservable();
+  
   private currentVideoSubject = new BehaviorSubject<Video | null>(null);
   public currentVideo$ = this.currentVideoSubject.asObservable();
+  
+  private uploadProgressSubject = new BehaviorSubject<UploadProgressInfo>({
+    progress: 0,
+    status: 'pending'
+  });
+  public uploadProgress$ = this.uploadProgressSubject.asObservable();
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
+    /**
+   * Get all videos with pagination
+   */
+  getVideos(pageRequest: PageRequest = { page: 0, size: 10 }): Observable<PageResponse<Video>> {
+    this.loadingSubject.next(true);
+    
+    let params = new HttpParams()
+      .set('page', pageRequest.page.toString())
+      .set('size', pageRequest.size.toString());
+      
+    if (pageRequest.sort) {
+      params = params.set('sort', pageRequest.sort);
+      if (pageRequest.direction) {
+        params = params.set('direction', pageRequest.direction);
+      }
+    }
+    
+    if (pageRequest.filter) {
+      params = params.set('filter', pageRequest.filter);
+    }
+    
+    if (pageRequest.filterType) {
+      params = params.set('filterType', pageRequest.filterType);
+    }
+    
+    return this.http.get<VideoPageResponse>(`${this.apiUrl}/page`, { params })
+      .pipe(
+        map((response: VideoPageResponse): PageResponse<Video> => ({
+          ...response,
+          content: response.content.map((video: VideoResponse): Video => ({
+            ...video,
+            uploadDate: new Date(video.uploadDate)
+          }))
+        })),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
+  }
   
   /**
-   * Get all videos
+   * Get all videos (non-paginated, for backwards compatibility)
    */
   getAllVideos(): Observable<Video[]> {
-    return of(this.videos);
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse[]>(this.apiUrl)
+      .pipe(
+        map((videos: VideoResponse[]): Video[] => {
+          // Convert date strings to Date objects
+          return videos.map((video: VideoResponse): Video => ({
+            ...video,
+            uploadDate: new Date(video.uploadDate)
+          }));
+        }),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
   }
 
   /**
-   * Get premium videos
+   * Get premium videos with pagination
    */
-  getPremiumVideos(): Observable<Video[]> {
-    return of(this.videos.filter(video => video.isPremium));
+  getPremiumVideos(pageRequest: PageRequest = { page: 0, size: 10 }): Observable<PageResponse<Video>> {
+    pageRequest.filterType = 'premium';
+    return this.getVideos(pageRequest);
+  }
+  
+  /**
+   * Get premium videos (non-paginated, for backwards compatibility)
+   */
+  getAllPremiumVideos(): Observable<Video[]> {
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse[]>(`${this.apiUrl}/premium`)
+      .pipe(
+        map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
+          ...video,
+          uploadDate: new Date(video.uploadDate)
+        }))),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
   }
 
   /**
-   * Get free videos
+   * Get free videos with pagination
    */
-  getFreeVideos(): Observable<Video[]> {
-    return of(this.videos.filter(video => !video.isPremium));
+  getFreeVideos(pageRequest: PageRequest = { page: 0, size: 10 }): Observable<PageResponse<Video>> {
+    pageRequest.filterType = 'free';
+    return this.getVideos(pageRequest);
+  }
+  
+  /**
+   * Get free videos (non-paginated, for backwards compatibility)
+   */
+  getAllFreeVideos(): Observable<Video[]> {
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse[]>(`${this.apiUrl}/free`)
+      .pipe(
+        map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
+          ...video,
+          uploadDate: new Date(video.uploadDate)
+        }))),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
   }
 
   /**
    * Get video by ID
    */
   getVideoById(id: string): Observable<Video | undefined> {
-    const video = this.videos.find(v => v.id === id);
-    return of(video);
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse>(`${this.apiUrl}/${id}`)
+      .pipe(
+        map((video: VideoResponse): Video => ({
+          ...video,
+          uploadDate: new Date(video.uploadDate)
+        })),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => {
+          // For 404 errors, return undefined instead of throwing
+          if (error.status === 404) {
+            this.loadingSubject.next(false);
+            return of(undefined);
+          }
+          return this.handleError(error);
+        })
+      );
   }
 
   /**
    * Set current video
    */
   setCurrentVideo(videoId: string): void {
-    const video = this.videos.find(v => v.id === videoId);
-    this.currentVideoSubject.next(video || null);
+    this.getVideoById(videoId).subscribe({
+      next: (video: Video | undefined): void => this.currentVideoSubject.next(video || null),
+      error: (error: Error): void => {
+        console.error('Error setting current video:', error);
+        this.currentVideoSubject.next(null);
+      }
+    });
   }
 
   /**
    * Like a video
    */
   likeVideo(videoId: string): Observable<boolean> {
-    const video = this.videos.find(v => v.id === videoId);
-    if (video) {
-      video.likes++;
-      return of(true);
-    }
-    return of(false);
+    return this.http.post<LikeResponse>(`${this.apiUrl}/${videoId}/like`, {})
+      .pipe(
+        map((): boolean => true),
+        catchError((error: HttpErrorResponse): Observable<boolean> => {
+          console.error('Error liking video:', error);
+          return of(false);
+        })
+      );
   }
 
   /**
    * Unlike a video
    */
   unlikeVideo(videoId: string): Observable<boolean> {
-    const video = this.videos.find(v => v.id === videoId);
-    if (video && video.likes > 0) {
-      video.likes--;
-      return of(true);
-    }
-    return of(false);
+    return this.http.post<LikeResponse>(`${this.apiUrl}/${videoId}/unlike`, {})
+      .pipe(
+        map((): boolean => true),
+        catchError((error: HttpErrorResponse): Observable<boolean> => {
+          console.error('Error unliking video:', error);
+          return of(false);
+        })
+      );
   }
 
   /**
    * Get related videos by tags (excluding the current video)
    */
   getRelatedVideos(videoId: string, limit: number = 3): Observable<Video[]> {
-    const currentVideo = this.videos.find(v => v.id === videoId);
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse[]>(`${this.apiUrl}/${videoId}/related?limit=${limit}`)
+      .pipe(
+        map((videos: VideoResponse[]): Video[] => videos.map((video: VideoResponse): Video => ({
+          ...video,
+          uploadDate: new Date(video.uploadDate)
+        }))),
+        tap((): void => this.loadingSubject.next(false)),
+        catchError((error: HttpErrorResponse) => this.handleError(error))
+      );
+  }
+  /**
+   * Upload a video with progress tracking
+   */
+  uploadVideo(videoFile: File, thumbnailFile: File, videoData: Partial<Video>): Observable<HttpEvent<any>> {
+    this.uploadProgressSubject.next({
+      progress: 0,
+      status: 'uploading',
+      message: 'Uploading video...'
+    });
     
-    if (!currentVideo) {
-      return of([]);
+    const formData = new FormData();
+    
+    if (videoFile) {
+      formData.append('videoFile', videoFile);
     }
-
-    // Find videos with similar tags
-    const relatedVideos = this.videos
-      .filter(v => v.id !== videoId) // Exclude current video
-      .map(video => {
-        const commonTags = video.tags.filter(tag => currentVideo.tags.includes(tag));
-        return {
-          video,
-          relevance: commonTags.length
-        };
+    
+    formData.append('thumbnailFile', thumbnailFile);
+    formData.append('videoData', JSON.stringify(videoData));
+    
+    const req = new HttpRequest('POST', `${this.apiUrl}/upload`, formData, {
+      reportProgress: true
+    });
+    
+    return this.http.request(req).pipe(
+      tap((event: HttpEvent<any>): void => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          const progress = Math.round(100 * event.loaded / event.total);
+          this.uploadProgressSubject.next({
+            progress,
+            status: 'uploading',
+            message: `Uploaded ${progress}%`
+          });
+        } else if (event.type === HttpEventType.Response) {
+          this.uploadProgressSubject.next({
+            progress: 100,
+            status: 'complete',
+            message: 'Upload complete!'
+          });
+        }
+      }),
+      catchError((error: HttpErrorResponse) => {
+        this.uploadProgressSubject.next({
+          progress: 0,
+          status: 'error',
+          message: error.message
+        });
+        return this.handleError(error);
       })
-      .filter(item => item.relevance > 0)
-      .sort((a, b) => b.relevance - a.relevance)
-      .map(item => item.video)
-      .slice(0, limit);
-
-    return of(relatedVideos);
+    );
+  }
+  
+  /**
+   * Delete a video
+   */
+  deleteVideo(videoId: string): Observable<boolean> {
+    return this.http.delete<void>(`${this.apiUrl}/${videoId}`).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error deleting video:', error);
+        return of(false);
+      })
+    );
+  }
+  
+  /**
+   * Bulk delete videos
+   */
+  bulkDeleteVideos(videoIds: string[]): Observable<boolean> {
+    return this.http.post<void>(`${this.apiUrl}/bulk-delete`, { ids: videoIds }).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error bulk deleting videos:', error);
+        return of(false);
+      })
+    );
+  }
+  
+  /**
+   * Update video premium status
+   */
+  updatePremiumStatus(videoId: string, isPremium: boolean): Observable<boolean> {
+    return this.http.patch<void>(`${this.apiUrl}/${videoId}/premium`, { isPremium }).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error updating premium status:', error);
+        return of(false);
+      })
+    );
+  }
+  
+  /**
+   * Bulk update premium status
+   */
+  bulkUpdatePremiumStatus(videoIds: string[], isPremium: boolean): Observable<boolean> {
+    return this.http.post<void>(`${this.apiUrl}/bulk-premium`, { ids: videoIds, isPremium }).pipe(
+      map(() => true),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error bulk updating premium status:', error);
+        return of(false);
+      })
+    );
+  }
+  
+  /**
+   * Update video metadata
+   */
+  updateVideoMetadata(videoId: string, videoData: Partial<Video>): Observable<Video | undefined> {
+    return this.http.put<VideoResponse>(`${this.apiUrl}/${videoId}`, videoData).pipe(
+      map((video: VideoResponse): Video => ({
+        ...video,
+        uploadDate: new Date(video.uploadDate)
+      })),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error updating video metadata:', error);
+        return of(undefined);
+      })
+    );
+  }
+  
+  /**
+   * Reset upload progress
+   */
+  resetUploadProgress(): void {
+    this.uploadProgressSubject.next({
+      progress: 0,
+      status: 'pending'
+    });
+  }
+  
+  /**
+   * Handle HTTP errors
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    this.loadingSubject.next(false);
+    let errorMessage = 'An unknown error occurred';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side error
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    }
+    
+    console.error(errorMessage);
+    return throwError((): Error => new Error(errorMessage));
   }
 }

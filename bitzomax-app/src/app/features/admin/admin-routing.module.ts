@@ -4,6 +4,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { VideoManagementComponent } from './video-management/video-management.component';
 import { VideoUploadComponent } from './video-upload/video-upload.component';
+import { VideoCleanupComponent } from './components/video-cleanup/video-cleanup.component';
 
 const routes: Routes = [
   { 
@@ -21,6 +22,10 @@ const routes: Routes = [
   { 
     path: 'upload', 
     component: VideoUploadComponent 
+  },
+  { 
+    path: 'cleanup', 
+    component: VideoCleanupComponent 
   }
 ];
 

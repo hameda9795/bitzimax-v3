@@ -1,0 +1,208 @@
+.grid-bg {
+  position: relative;
+  background-color: #0a0014;
+  background-image: linear-gradient(rgba(0, 255, 159, 0.05) 1px, transparent 1px),
+                    linear-gradient(to right, rgba(0, 255, 159, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  min-height: 100vh;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(to bottom, rgba(10, 0, 20, 0.8), transparent);
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+// Desktop layout with video on left side, content on right side
+.video-fixed-container {
+  height: calc(100vh - 40px);
+  width: auto;
+  position: sticky;
+  top: 20px;
+  background-color: #000;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.video-content-container {
+  flex: 1;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+// Video container styles
+.video-container {
+  position: relative;
+  aspect-ratio: 16/9;
+  background-color: #000;
+  
+  @media (max-width: 640px) {
+    aspect-ratio: 16/9; // Maintain aspect ratio on small screens
+  }
+  
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; // Use contain to show the entire video without cropping
+    background-color: #000;
+    display: block; // Ensure the video is displayed as a block element
+    cursor: pointer; // Show pointer cursor on hover
+  }
+  
+  &.vertical-video {
+    aspect-ratio: 9/16;
+    width: 100%;
+    
+    @media (max-width: 767px) {
+      height: 100vh;
+      max-height: calc(100vh - 60px);
+      margin: 0 auto;
+      
+      video {
+        object-fit: contain;
+      }
+    }
+    
+    @media (min-width: 768px) and (max-width: 1023px) {
+      max-height: 70vh;
+      width: auto; // Auto width based on aspect ratio
+      margin: 0 auto;
+      
+      video {
+        object-fit: contain;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      height: calc(100vh - 40px);
+      width: calc((100vh - 40px) * 9/16); // Calculate exact width to maintain 9:16 ratio
+      margin: 0;
+      
+      video {
+        object-fit: cover; // Fill the container exactly
+        height: 100%;
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Desktop layout fix
+@media (min-width: 1024px) {
+  .hidden.lg\:flex {
+    height: 100vh;
+  }
+  
+  .video-fixed-container {
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+  }
+  
+  .video-content-container {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(10, 0, 20, 0.3);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 0, 128, 0.5);
+      border-radius: 3px;
+    }
+  }
+}
+
+// Force video to be visible
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+// Play indicator animation
+@keyframes ping {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-ping-once {
+  animation: ping 0.5s cubic-bezier(0, 0, 0.2, 1) 1;
+}
+
+// Sticky video player for mobile scrolling
+@media (max-width: 1023px) {
+  .sticky {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+}
+
+.video-player-section {
+  position: relative;
+  z-index: 2;
+}
+
+// Glitch effect for the premium banner
+@keyframes borderGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 0, 128, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 128, 1), 0 0 20px rgba(0, 225, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 0, 128, 0.7);
+  }
+}
+
+// Add a glow effect to the video container
+.shadow-hot-pink {
+  animation: borderGlow 3s infinite;
+}
+
+// Add a bit more style to tags
+[class*="tag-"] {
+  &:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+  }
+}
+
+// Better mobile experience
+@media (max-width: 768px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+// Instagram-like appearance for video on mobile
+@media (max-width: 767px) {
+  .video-container.vertical-video {
+    border-radius: 0;
+    
+    video {
+      object-fit: contain;
+    }
+  }
+}

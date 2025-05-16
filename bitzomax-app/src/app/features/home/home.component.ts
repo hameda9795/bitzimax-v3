@@ -16,6 +16,7 @@ export class HomeComponent implements OnInit {
   featuredVideos: Video[] = [];
   recentVideos: Video[] = [];
   popularVideos: Video[] = [];
+  baseUrl = 'http://localhost:8080';
   
   constructor(
     private videoService: VideoService,
@@ -26,6 +27,20 @@ export class HomeComponent implements OnInit {
   ngOnInit(): void {
     // Get all videos and sort them for different sections
     this.videoService.getAllVideos().subscribe(videos => {
+      if (!videos || videos.length === 0) {
+        console.warn('No videos found from the backend');
+        return;
+      }
+      
+      console.log('Loaded videos:', videos);
+      
+      // Process videos - ensure URLs start with http://localhost:8080
+      videos = videos.map(video => ({
+        ...video,
+        thumbnailUrl: this.ensureFullUrl(video.thumbnailUrl),
+        videoUrl: this.ensureFullUrl(video.videoUrl)
+      }));
+      
       // Get 3 featured videos (premium videos with most views)
       this.featuredVideos = [...videos]
         .filter(video => video.isPremium)
@@ -42,6 +57,17 @@ export class HomeComponent implements OnInit {
         .sort((a, b) => b.likes - a.likes)
         .slice(0, 4);
     });
+  }
+
+  /**
+   * Make sure URL starts with the base URL
+   */
+  private ensureFullUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    return url.startsWith('/') 
+      ? `${this.baseUrl}${url}` 
+      : `${this.baseUrl}/${url}`;
   }
 
   /**
@@ -65,17 +91,15 @@ export class HomeComponent implements OnInit {
         this.videoService.unlikeVideo(video.id).subscribe();
       }
     });
-  }
-
-  /**
+  }  /**
    * Check if user has liked the video
+   * Uses the current user from the userService to check if the video is in their liked videos
    */
   isLiked(videoId: string): boolean {
-    let isLiked = false;
-    this.userService.getCurrentUser().subscribe(user => {
-      isLiked = user.likedVideos.includes(videoId);
-    });
-    return isLiked;
+    // Get the current user synchronously from the BehaviorSubject value
+    const currentUser = this.userService.getCurrentUserSync();
+    // Check if the user exists and has the video in their liked videos list
+    return currentUser && currentUser.likedVideos ? currentUser.likedVideos.includes(videoId) : false;
   }
 
   /**

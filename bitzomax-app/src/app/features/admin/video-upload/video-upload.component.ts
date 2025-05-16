@@ -178,19 +178,11 @@ export class VideoUploadComponent implements OnInit {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-
   // Submit the form to upload the video
   onSubmit() {
     if (this.uploadForm.valid && (this.videoFile || this.convertedFile) && this.thumbnailFile) {
-      const formData = new FormData();
-      
       // Use the converted file if available, otherwise use the original
       const fileToUpload = this.convertedFile || this.videoFile;
-      if (fileToUpload) {
-        formData.append('videoFile', fileToUpload);
-      }
-      
-      formData.append('thumbnailFile', this.thumbnailFile);
       
       // Add form data
       const videoData: Partial<Video> = {
@@ -200,32 +192,48 @@ export class VideoUploadComponent implements OnInit {
         originalFormat: this.videoFile?.type,
       };
       
-      formData.append('videoData', JSON.stringify(videoData));
+      if (!fileToUpload) {
+        console.error('No video file to upload');
+        return;
+      }
       
       this.isUploading = true;
       this.uploadProgress = 0;
       
-      // Simulate upload progress (in a real app, this would come from an HTTP request)
-      const progressInterval = setInterval(() => {
-        this.uploadProgress += 5;
-        if (this.uploadProgress >= 100) {
-          clearInterval(progressInterval);
+      // Subscribe to the upload progress
+      const uploadSubscription = this.videoService.uploadProgress$.subscribe(
+        (progressInfo) => {
+          this.uploadProgress = progressInfo.progress;
+          
+          if (progressInfo.status === 'complete') {
+            this.isUploading = false;
+            
+            // Reset the form
+            this.resetForm();
+            
+            // Show success message
+            alert('Video uploaded successfully!');
+            
+            // Unsubscribe from progress updates
+            uploadSubscription.unsubscribe();
+          } else if (progressInfo.status === 'error') {
+            this.isUploading = false;
+            alert(`Upload failed: ${progressInfo.message}`);
+            uploadSubscription.unsubscribe();
+          }
         }
-      }, 200);
+      );
       
-      // Here you would actually call your API to upload the video
-      // For this example, we'll simulate a successful upload
-      setTimeout(() => {
-        this.isUploading = false;
-        this.uploadProgress = 100;
-        clearInterval(progressInterval);
-        
-        // Reset the form
-        this.resetForm();
-        
-        // Show success message
-        alert('Video uploaded successfully!');
-      }, 4000);
+      // Call the video service to upload
+      this.videoService.uploadVideo(fileToUpload, this.thumbnailFile, videoData)
+        .subscribe({
+          error: (error) => {
+            this.isUploading = false;
+            console.error('Upload error:', error);
+            alert(`Upload failed: ${error.message}`);
+            uploadSubscription.unsubscribe();
+          }
+        });
     }
   }
   
