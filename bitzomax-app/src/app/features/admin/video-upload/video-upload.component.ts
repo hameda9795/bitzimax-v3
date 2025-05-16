@@ -14,6 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-video-upload',
@@ -48,23 +49,67 @@ export class VideoUploadComponent implements OnInit {
   conversionComplete = false;
   originalFileSize = 0;
   convertedFileSize = 0;
+  isEditing = false;
+  editingVideoId: string | null = null;
+  uploadError: string | null = null;
   
   constructor(
     private fb: FormBuilder,
     private videoConversionService: VideoConversionService,
-    private videoService: VideoService
+    private videoService: VideoService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.uploadForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(5)]],
-      description: ['', [Validators.required, Validators.minLength(20)]],
-      poemText: [''],
+      title: ['', [Validators.required, Validators.minLength(3)]],
+      description: ['', [Validators.required, Validators.minLength(10)]],
+      isPremium: [false],
+      tags: [''],
       seoTitle: [''],
       seoDescription: [''],
-      isPremium: [false]
+      seoKeywords: ['']
     });
   }
 
   ngOnInit(): void {
+    // Check if we're editing an existing video
+    this.route.queryParams.subscribe(params => {
+      const videoId = params['edit'];
+      if (videoId) {
+        this.isEditing = true;
+        this.editingVideoId = videoId;
+        this.loadVideoData(videoId);
+      }
+    });
+  }
+
+  private loadVideoData(videoId: string): void {
+    this.videoService.getVideoById(videoId).subscribe({
+      next: (video) => {
+        if (video) {
+          // Pre-fill the form with existing video data
+          this.uploadForm.patchValue({
+            title: video.title,
+            description: video.description,
+            isPremium: video.isPremium,
+            tags: video.tags ? video.tags.join(', ') : '',
+            seoTitle: video.seoTitle || '',
+            seoDescription: video.seoDescription || '',
+            seoKeywords: video.seoKeywords ? video.seoKeywords.join(', ') : ''
+          });
+
+          // Set thumbnail preview if exists
+          if (video.thumbnailUrl) {
+            this.thumbnailPreview = video.thumbnailUrl;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading video data:', error);
+        alert('Failed to load video data. Please try again.');
+        this.router.navigate(['/admin/videos']);
+      }
+    });
   }
 
   // Handles video file selection

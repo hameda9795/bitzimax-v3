@@ -45,6 +45,11 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
   selectedFilter = 'all';
   searchQuery = '';
   
+  // Responsive columns configuration
+  displayedColumnsMobile: string[] = ['thumbnail', 'title', 'actions'];
+  displayedColumnsTablet: string[] = ['select', 'thumbnail', 'title', 'premium', 'actions'];
+  currentDisplayColumns: string[] = this.displayedColumns;
+  
   // Pagination parameters
   pageSize = 10;
   pageIndex = 0;
@@ -55,6 +60,7 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
   
   // Subject for handling unsubscribe on destroy
   private destroy$ = new Subject<void>();
+  private resizeObserver: ResizeObserver;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -63,15 +69,38 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
     private videoService: VideoService,
     private dialog: MatDialog,
     private router: Router
-  ) { }
+  ) {
+    // Initialize ResizeObserver for responsive layout
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        this.adjustColumnsByScreenSize(entry.contentRect.width);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.loadVideos();
+    // Start observing the table container for size changes
+    const tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+      this.resizeObserver.observe(tableContainer);
+    }
   }
   
   ngOnDestroy(): void {
-    // Clean up subscriptions when the component is destroyed
     this.destroy$.next();
     this.destroy$.complete();
+    this.resizeObserver.disconnect();
+  }
+
+  private adjustColumnsByScreenSize(width: number): void {
+    if (width < 600) {
+      this.currentDisplayColumns = this.displayedColumnsMobile;
+    } else if (width < 960) {
+      this.currentDisplayColumns = this.displayedColumnsTablet;
+    } else {
+      this.currentDisplayColumns = this.displayedColumns;
+    }
   }
 
   ngAfterViewInit() {
@@ -288,8 +317,11 @@ export class VideoManagementComponent implements OnInit, OnDestroy {
   }
 
   formatDuration(seconds: number): string {
+    if (!seconds || isNaN(seconds)) {
+      return '0:00';
+    }
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 

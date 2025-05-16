@@ -151,16 +151,9 @@
             <th mat-header-cell *matHeaderCellDef>STATUS</th>
             <td mat-cell *matCellDef="let video">
               <div class="premium-toggle">
-                <span class="status-badge" [class.premium]="video.isPremium">
+                <span class="status-indicator" [class.premium]="video.isPremium">
                   {{ video.isPremium ? 'PREMIUM' : 'FREE' }}
                 </span>
-                <button 
-                  class="toggle-button" 
-                  (click)="togglePremium(video)" 
-                  [matTooltip]="video.isPremium ? 'Make Free' : 'Make Premium'"
-                  matTooltipPosition="above">
-                  <mat-icon>{{ video.isPremium ? 'lock' : 'lock_open' }}</mat-icon>
-                </button>
               </div>
             </td>
           </ng-container>
@@ -170,19 +163,11 @@
             <th mat-header-cell *matHeaderCellDef>ACTIONS</th>
             <td mat-cell *matCellDef="let video">
               <div class="action-buttons">
-                <button 
-                  class="action-button edit" 
-                  (click)="editVideo(video)" 
-                  matTooltip="Edit"
-                  matTooltipPosition="above">
-                  <mat-icon>edit</mat-icon>
+                <button class="status-indicator edit" (click)="editVideo(video)">
+                  EDIT
                 </button>
-                <button 
-                  class="action-button delete" 
-                  (click)="deleteVideo(video)" 
-                  matTooltip="Delete"
-                  matTooltipPosition="above">
-                  <mat-icon>delete</mat-icon>
+                <button class="status-indicator delete" (click)="deleteVideo(video)">
+                  DELETE
                 </button>
               </div>
             </td>

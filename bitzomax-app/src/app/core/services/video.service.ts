@@ -55,6 +55,7 @@ interface UploadProgressInfo {
 })
 export class VideoService {
   private apiUrl = 'http://localhost:8080/api/videos';
+  private baseUrl = 'http://localhost:8080';
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
   
@@ -68,7 +69,16 @@ export class VideoService {
   public uploadProgress$ = this.uploadProgressSubject.asObservable();
 
   constructor(private http: HttpClient) { }
-    /**
+
+  // Helper method to ensure URLs are absolute
+  private ensureAbsoluteUrl(url: string): string {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return `${this.baseUrl}${url}`;
+    return `${this.baseUrl}/${url}`;
+  }
+
+  /**
    * Get all videos with pagination
    */
   getVideos(pageRequest: PageRequest = { page: 0, size: 10 }): Observable<PageResponse<Video>> {
@@ -99,7 +109,10 @@ export class VideoService {
           ...response,
           content: response.content.map((video: VideoResponse): Video => ({
             ...video,
-            uploadDate: new Date(video.uploadDate)
+            thumbnailUrl: this.ensureAbsoluteUrl(video.thumbnailUrl),
+            videoUrl: this.ensureAbsoluteUrl(video.videoUrl),
+            uploadDate: new Date(video.uploadDate),
+            duration: video.duration || 0
           }))
         })),
         tap((): void => this.loadingSubject.next(false)),
