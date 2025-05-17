@@ -1,0 +1,70 @@
+// Import global variables from main styles.scss
+// The existing import was incorrect as there's no _variables.scss file
+
+.genre-banner {
+  background: linear-gradient(
+    135deg,
+    rgba(125, 41, 255, 0.8),
+    rgba(255, 0, 128, 0.8)
+  );
+  padding: 3rem 2rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(45deg, rgba(0,0,0,0) 45%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 55%),
+      linear-gradient(-45deg, rgba(0,0,0,0) 45%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 55%);
+    background-size: 200% 200%;
+    animation: shimmer 3s infinite linear;
+    z-index: 1;
+  }
+  
+  .genre-banner-content {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 200%;
+  }
+  100% {
+    background-position: -200% -200%;
+  }
+}
+
+.video-info-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.video-container {
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    .video-info-overlay {
+      opacity: 1;
+    }
+  }
+}
+
+.sidebar-video-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  }
+}

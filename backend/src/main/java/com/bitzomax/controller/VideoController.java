@@ -58,9 +58,7 @@ public class VideoController {    private static final Logger logger = LoggerFac
         logger.info("Fetching all videos, userId={}, showHidden={}", userId, showHidden);
         List<Video> videos = videoService.getAllVideos(showHidden);
         return ResponseEntity.ok(videos);
-    }
-
-    /**
+    }    /**
      * Get paged videos
      * GET /videos/page
      *
@@ -92,6 +90,50 @@ public class VideoController {    private static final Logger logger = LoggerFac
                 page, size, sort + " " + direction, userId, showHidden);
 
         Page<Video> videos = videoService.getPagedVideos(pageable, showHidden);
+        return ResponseEntity.ok(videos);
+    }
+    
+    /**
+     * Get videos by genre ID
+     * GET /videos/genre/{genreId}
+     *
+     * @param genreId the genre ID
+     * @return list of videos belonging to the specified genre
+     */
+    @GetMapping("/genre/{genreId}")
+    public ResponseEntity<List<Video>> getVideosByGenre(@PathVariable Long genreId) {
+        logger.info("Fetching videos by genre ID: {}", genreId);
+        List<Video> videos = videoService.getVideosByGenreId(genreId);
+        return ResponseEntity.ok(videos);
+    }
+    
+    /**
+     * Get paged videos by genre ID
+     * GET /videos/genre/{genreId}/page
+     *
+     * @param genreId the genre ID
+     * @param page the page number
+     * @param size the page size
+     * @param sort the sort field
+     * @param direction the sort direction
+     * @return paged list of videos belonging to the specified genre
+     */
+    @GetMapping("/genre/{genreId}/page")
+    public ResponseEntity<Page<Video>> getPagedVideosByGenre(
+            @PathVariable Long genreId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(defaultValue = "uploadDate") String sort,
+            @RequestParam(defaultValue = "desc") String direction) {
+            
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("asc") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, sortDirection, sort);
+
+        logger.info("Fetching paged videos by genre ID: {}, page={}, size={}, sort={}",
+                genreId, page, size, sort + " " + direction);
+
+        Page<Video> videos = videoService.getPagedVideosByGenreId(genreId, pageable);
         return ResponseEntity.ok(videos);
     }
 

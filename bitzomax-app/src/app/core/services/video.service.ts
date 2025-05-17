@@ -87,6 +87,28 @@ export class VideoService {
     // Load videos initially
     this.loadVideos();
   }
+  /**   * Get videos by genre ID
+   * @param genreId The ID of the genre to filter by
+   * @returns Observable of videos belonging to the specified genre
+   */
+  getVideosByGenre(genreId: number): Observable<Video[]> {
+    this.loadingSubject.next(true);
+    return this.http.get<VideoResponse[]>(`${this.apiUrl}/genre/${genreId}`)
+      .pipe(
+        map((videos: VideoResponse[]): Video[] => {
+          return videos.map(video => this.convertVideoResponse(video));
+        }),
+        tap(videos => {
+          console.log(`Fetched ${videos.length} videos for genre ID ${genreId}`);
+          this.loadingSubject.next(false);
+        }),
+        catchError(error => {
+          this.loadingSubject.next(false);
+          console.error(`Error fetching videos for genre ${genreId}:`, error);
+          return of([]);
+        })
+      );
+  }
 
   /**
    * Check if the API is accessible

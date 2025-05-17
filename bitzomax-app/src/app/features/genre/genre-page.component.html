@@ -1,0 +1,132 @@
+<section class="min-h-screen bg-cyber-black">
+  <!-- Genre Banner Section -->
+  <div *ngIf="currentGenre" class="genre-banner mb-8">
+    <div class="genre-banner-content container mx-auto px-4">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-cyber font-bold text-white mb-4 glitch-text">
+        {{ currentGenre.name }}
+      </h1>
+      <p *ngIf="currentGenre.description" class="text-lg md:text-xl text-gray-200 mb-4 font-light">
+        {{ currentGenre.description }}
+      </p>
+      <div class="flex items-center space-x-2">
+        <span class="text-neon-green">{{ videos.length }} videos</span>
+        <span class="text-gray-300">•</span>
+        <span class="text-electric-blue">{{ genreName }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="flex justify-center items-center min-h-[300px]">
+    <div class="loader">
+      <div class="w-16 h-16 border-t-4 border-b-4 border-neon-green rounded-full animate-spin"></div>
+    </div>
+  </div>
+
+  <!-- Main Content with Sidebar -->
+  <div *ngIf="!loading" class="container mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Main Content - Videos Grid -->
+      <div class="lg:w-8/12">
+        <div *ngIf="videos.length === 0" class="text-center py-16">
+          <mat-icon class="text-hot-pink text-6xl mb-4">video_library</mat-icon>
+          <h2 class="text-2xl font-bold text-electric-blue mb-2">No videos found</h2>
+          <p class="text-gray-400">There are no videos available in this genre yet.</p>
+        </div>
+        
+        <!-- Videos Grid -->
+        <div *ngIf="videos.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let video of videos" 
+              class="video-card bg-cyber-black border border-neon-green rounded-lg overflow-hidden">
+            <div class="video-container cursor-pointer" (click)="watchVideo(video)">
+              <img [src]="video.thumbnailUrl" 
+                  [alt]="video.title" 
+                  class="w-full h-full">
+              <div class="video-info-overlay absolute inset-0 p-3 flex flex-col justify-end">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                  <span *ngIf="video.isPremium" class="bg-hot-pink text-white px-2 py-1 rounded-full text-xs">PREMIUM</span>
+                </div>
+                <h3 class="text-base font-bold text-white mb-1 line-clamp-2">{{ video.title }}</h3>
+                <p class="text-xs text-gray-300 line-clamp-2">{{ video.description }}</p>
+              </div>
+            </div>
+            <div class="p-3 border-t border-neon-green bg-opacity-30 mt-auto">
+              <div class="flex justify-between items-center">
+                <span class="text-electric-blue text-xs">{{ video.views | number }} views</span>
+                <button (click)="toggleLike(video, $event)" 
+                        class="text-hot-pink hover:text-neon-green transition-colors">
+                  <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                  <span class="ml-1 text-xs">{{ video.likes }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sidebar Content -->
+      <div class="lg:w-4/12">
+        <div class="sticky top-8">
+          <!-- Genre-based Sidebar -->
+          <div class="mb-4 border-b border-electric-blue pb-2">
+            <h2 class="text-2xl font-cyber font-bold text-hot-pink mb-2">More Genres</h2>
+          </div>
+          
+          <!-- No Genres Message -->
+          <div *ngIf="genreSidebar.length === 0" class="mb-8 p-4 bg-cyber-dark bg-opacity-30 border border-electric-blue rounded-lg text-center">
+            <mat-icon class="text-electric-blue text-4xl mb-2">category</mat-icon>
+            <p class="text-gray-400 mb-2">No other genres available.</p>
+            <p class="text-xs text-gray-500">More genres will appear here once videos are categorized.</p>
+          </div>
+          
+          <!-- Genre Sections -->
+          <div *ngFor="let genreSection of genreSidebar" class="mb-8 genre-sidebar-section">
+            <div class="genre-sidebar-header mb-4 border-b border-hot-pink pb-2 flex items-center justify-between">
+              <h3 class="text-2xl font-cyber font-bold text-electric-blue">{{ genreSection.genre.name }}</h3>
+              <a (click)="navigateToGenre(genreSection.genre)" class="text-neon-green hover:text-hot-pink text-sm cursor-pointer">View All</a>
+            </div>
+            
+            <!-- Vertical Video List (9:16 ratio) -->
+            <div class="grid grid-cols-2 gap-4">
+              <div *ngFor="let video of genreSection.videos" 
+                  class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer"
+                  (click)="watchVideo(video)">
+                <!-- 9:16 aspect ratio container -->
+                <div class="relative pb-[177.78%]">
+                  <img [src]="video.thumbnailUrl" 
+                      [alt]="video.title" 
+                      class="absolute inset-0 w-full h-full object-cover">
+                  
+                  <!-- Gradient overlay for better text readability -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-cyber-black via-transparent to-transparent opacity-80"></div>
+                  
+                  <!-- Video title overlay -->
+                  <div class="absolute bottom-0 left-0 right-0 p-2 text-white">
+                    <h4 class="text-sm font-bold line-clamp-2">{{ video.title }}</h4>
+                    <div class="flex items-center justify-between mt-1">
+                      <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                      <span *ngIf="video.isPremium" 
+                            class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                        PRO
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Promo Banner -->
+          <div class="sidebar-promo mt-8 p-6 rounded-lg bg-gradient-to-r from-deep-purple to-hot-pink text-white">
+            <h3 class="text-xl font-bold mb-2">Discover More Content</h3>
+            <p class="mb-4 text-sm">Explore our full library of videos across all genres.</p>
+            <button (click)="router.navigate(['/'])" class="bg-white text-hot-pink font-bold py-2 px-4 rounded-lg text-sm">
+              Browse Library
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

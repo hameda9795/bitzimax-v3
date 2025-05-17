@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './features/home/home.component';
 import { VideoComponent } from './features/video/video.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { GenrePageComponent } from './features/genre/genre-page.component';
 import { withPreloading } from '@angular/router';
 
 export const routes: Routes = [
@@ -10,6 +11,7 @@ export const routes: Routes = [
   { path: 'videos', component: HomeComponent },
   { path: 'video/:id/:slug', component: VideoComponent, data: { renderMode: 'client' } },
   { path: 'video/:id', redirectTo: 'video/:id/untitled', pathMatch: 'full' },
+  { path: 'genre/:genreName', component: GenrePageComponent },
   { path: 'profile', component: ProfileComponent },
   { 
     path: 'admin', 

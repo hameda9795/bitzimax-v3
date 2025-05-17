@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { VideoService } from '../../core/services/video.service';
 import { UserService } from '../../core/services/user.service';
 import { GenreService } from '../../core/services/genre.service';
@@ -15,12 +15,11 @@ interface GenreSidebar {
   videos: Video[];
 }
 
-@Component({
-  selector: 'app-home',
+@Component({  selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule]
+  imports: [CommonModule, MatIconModule, RouterModule]
 })
 export class HomeComponent implements OnInit {
   featuredVideos: Video[] = [];
@@ -38,7 +37,7 @@ export class HomeComponent implements OnInit {
     private genreService: GenreService,
     private router: Router,
     private subscriptionService: SubscriptionService,
-    private urlService: UrlService
+    public urlService: UrlService
   ) { }
 
   ngOnInit(): void {

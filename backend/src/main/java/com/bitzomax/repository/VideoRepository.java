@@ -104,7 +104,21 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     /**
      * Custom query to find videos with specific criteria
      * @return list of completed and visible videos
-     */
-    @Query("SELECT v FROM Video v WHERE v.isVisible = true AND v.conversionStatus = 'COMPLETED'")
+     */    @Query("SELECT v FROM Video v WHERE v.isVisible = true AND v.conversionStatus = 'COMPLETED'")
     List<Video> findAllCompletedAndVisibleVideos();
+    
+    /**
+     * Find all videos by genre ID
+     * @param genreId the genre ID to filter by
+     * @return list of videos belonging to the specified genre
+     */
+    List<Video> findByGenreIdAndIsVisibleTrue(Long genreId);
+    
+    /**
+     * Find videos by genre ID with pagination
+     * @param genreId the genre ID to filter by
+     * @param pageable pagination information
+     * @return page of videos belonging to the specified genre
+     */
+    Page<Video> findByGenreIdAndIsVisibleTrue(Long genreId, Pageable pageable);
 }

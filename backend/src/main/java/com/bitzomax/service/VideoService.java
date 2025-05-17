@@ -106,6 +106,28 @@ public class VideoService {
         }
     }
     
+    /**
+     * Find all videos by genre ID
+     * @param genreId the genre ID to filter by
+     * @return list of videos belonging to the specified genre
+     */
+    public List<Video> getVideosByGenreId(Long genreId) {
+        logger.debug("Fetching videos by genre ID: {}", genreId);
+        return videoRepository.findByGenreIdAndIsVisibleTrue(genreId);
+    }
+    
+    /**
+     * Find videos by genre ID with pagination
+     * @param genreId the genre ID to filter by
+     * @param pageable pagination information
+     * @return page of videos belonging to the specified genre
+     */
+    public Page<Video> getPagedVideosByGenreId(Long genreId, Pageable pageable) {
+        logger.debug("Fetching paged videos by genre ID: {}, page={}, size={}", 
+                genreId, pageable.getPageNumber(), pageable.getPageSize());
+        return videoRepository.findByGenreIdAndIsVisibleTrue(genreId, pageable);
+    }
+    
     @Transactional
     public void deleteVideo(Long id) {
         logger.debug("Deleting video with ID: {}", id);
@@ -131,114 +153,93 @@ public class VideoService {
         // Convert DTO to entity
         Video video = videoMapper.toEntity(videoDTO);
         
-        // Save the video
+        // Save entity
         Video savedVideo = videoRepository.save(video);
-        logger.info("Saved new video: {} (ID: {})", savedVideo.getTitle(), savedVideo.getId());
         
-        // Convert back to DTO and return
+        // Return as DTO
         return videoMapper.toDto(savedVideo);
     }
     
     /**
-     * Get a video by ID and convert it to a DTO
-     *
-     * @param id the video ID
-     * @return the video DTO
+     * Get a video by ID and return as DTO
      */
     public VideoDTO getVideoById(Long id) {
-        logger.debug("Getting video by ID: {}", id);
-        Video video = videoRepository.findById(id)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
-        return videoMapper.toDto(video);
+        logger.debug("Getting video by ID as DTO: {}", id);
+        return videoRepository.findById(id)
+            .map(videoMapper::toDto)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
     }
     
     /**
-     * Get all videos with pagination and convert them to DTOs
-     *
-     * @param pageable the pagination information
-     * @return a page of video DTOs
+     * Update an existing video from DTO
+     */
+    @Transactional
+    public VideoDTO updateVideo(Long id, VideoDTO videoDTO) {
+        logger.debug("Updating video with ID: {}", id);
+        
+        Video existingVideo = videoRepository.findById(id)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
+        
+        // Update fields from DTO
+        if (videoDTO.getTitle() != null) existingVideo.setTitle(videoDTO.getTitle());
+        if (videoDTO.getDescription() != null) existingVideo.setDescription(videoDTO.getDescription());
+        if (videoDTO.getThumbnailUrl() != null) existingVideo.setThumbnailUrl(videoDTO.getThumbnailUrl());
+        if (videoDTO.getVideoUrl() != null) existingVideo.setVideoUrl(videoDTO.getVideoUrl());
+        if (videoDTO.getDuration() != null) existingVideo.setDuration(videoDTO.getDuration());
+        if (videoDTO.getIsPremium() != null) existingVideo.setIsPremium(videoDTO.getIsPremium());
+        if (videoDTO.getPoemText() != null) existingVideo.setPoemText(videoDTO.getPoemText());
+        if (videoDTO.getSeoTitle() != null) existingVideo.setSeoTitle(videoDTO.getSeoTitle());
+        if (videoDTO.getSeoDescription() != null) existingVideo.setSeoDescription(videoDTO.getSeoDescription());
+        if (videoDTO.getConversionStatus() != null) existingVideo.setConversionStatus(videoDTO.getConversionStatus());
+        if (videoDTO.getIsVisible() != null) existingVideo.setIsVisible(videoDTO.getIsVisible());
+        
+        // Special case for collections - only update if not null and not empty
+        if (videoDTO.getTags() != null && !videoDTO.getTags().isEmpty()) existingVideo.setTags(videoDTO.getTags());
+        if (videoDTO.getHashtags() != null && !videoDTO.getHashtags().isEmpty()) existingVideo.setHashtags(videoDTO.getHashtags());
+        if (videoDTO.getSeoKeywords() != null && !videoDTO.getSeoKeywords().isEmpty()) existingVideo.setSeoKeywords(videoDTO.getSeoKeywords());
+        
+        // Update genre if provided
+        if (videoDTO.getGenre() != null && videoDTO.getGenre().getId() != null) {
+            existingVideo.getGenre().setId(videoDTO.getGenre().getId());
+            if (videoDTO.getGenre().getName() != null) {
+                existingVideo.getGenre().setName(videoDTO.getGenre().getName());
+            }
+        }
+        
+        // Save updated entity
+        Video savedVideo = videoRepository.save(existingVideo);
+        
+        // Return as DTO
+        return videoMapper.toDto(savedVideo);
+    }
+    
+    /**
+     * Get all videos with pagination
      */
     public Page<VideoDTO> getAllVideosWithPagination(Pageable pageable) {
-        logger.debug("Getting all videos with pagination: {}", pageable);
+        logger.debug("Getting all videos with pagination");
         Page<Video> videoPage = videoRepository.findAll(pageable);
         return videoPage.map(videoMapper::toDto);
     }
     
     /**
-     * Update a video from DTO
-     *
-     * @param id the video ID to update
-     * @param videoDTO the updated video data
-     * @return the updated video DTO
-     */
-    @Transactional
-    public VideoDTO updateVideo(Long id, VideoDTO videoDTO) {
-        logger.debug("Updating video with ID: {}", id);
-        Video existingVideo = videoRepository.findById(id)
-                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Video not found with ID: " + id));
-        
-        // Update the existing video with data from the DTO
-        videoMapper.updateEntityFromDto(videoDTO, existingVideo);
-        
-        // Save the updated video
-        Video updatedVideo = videoRepository.save(existingVideo);
-        logger.info("Updated video: {} (ID: {})", updatedVideo.getTitle(), updatedVideo.getId());
-        
-        // Convert back to DTO and return
-        return videoMapper.toDto(updatedVideo);
-    }
-    
-    /**
-     * Helper class to store video relevance score
-     */
-    private static class VideoRelevance {
-        final Video video;
-        final int score;
-        
-        VideoRelevance(Video video, int score) {
-            this.video = video;
-            this.score = score;
-        }
-    }
-
-    /**
-     * Find related videos based on tags and hashtags
-     *
-     * @param video the source video
-     * @param limit maximum number of related videos to return
-     * @return list of related videos
+     * Find related videos based on shared tags
      */
     public List<Video> findRelatedVideos(Video video, int limit) {
         logger.debug("Finding related videos for video ID: {}, limit: {}", video.getId(), limit);
         
-        // Get all videos
+        // This is a simple approach; in a real app, we would use:
+        // 1. First try videos with same genre + overlapping tags
+        // 2. Then try videos with same genre
+        // 3. Then try videos with overlapping tags
+        // 4. Finally just return popular videos
+        
+        // For now, we'll just return other visible videos, excluding the current one
         List<Video> allVideos = videoRepository.findByIsVisibleTrue();
-        
-        // Remove the source video from the list
-        allVideos.removeIf(v -> v.getId().equals(video.getId()));
-        
-        // Sort videos by relevance (number of matching tags and hashtags)
         return allVideos.stream()
-            .filter(v -> v.getIsVisible() != null && v.getIsVisible())
-            .map(relatedVideo -> {
-                int score = 0;
-                // Count matching tags
-                if (video.getTags() != null && relatedVideo.getTags() != null) {
-                    score += video.getTags().stream()
-                        .filter(tag -> relatedVideo.getTags().contains(tag))
-                        .count();
-                }
-                // Count matching hashtags
-                if (video.getHashtags() != null && relatedVideo.getHashtags() != null) {
-                    score += video.getHashtags().stream()
-                        .filter(hashtag -> relatedVideo.getHashtags().contains(hashtag))
-                        .count();
-                }
-                return new VideoRelevance(relatedVideo, score);
-            })
-            .sorted((a, b) -> Integer.compare(b.score, a.score))
+            .filter(v -> !v.getId().equals(video.getId()))
+            .sorted((v1, v2) -> Long.compare(v2.getViews(), v1.getViews()))
             .limit(limit)
-            .map(vr -> vr.video)
             .toList();
     }
 }

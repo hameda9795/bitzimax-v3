@@ -33,7 +33,7 @@
           <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
             Featured Content
           </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             <div *ngFor="let video of featuredVideos" 
                 class="video-card bg-cyber-black border border-neon-green rounded-lg overflow-hidden">
               <div class="video-container cursor-pointer" (click)="watchVideo(video)">
@@ -68,7 +68,7 @@
           <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
             Trending Now
           </h2>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div *ngFor="let video of popularVideos" 
                 class="video-card bg-cyber-black border border-electric-blue rounded-lg overflow-hidden">
               <div class="video-container cursor-pointer" (click)="watchVideo(video)">
@@ -84,6 +84,7 @@
                     </span>
                   </div>
                   <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
+                  <p class="text-xs text-gray-300 line-clamp-2">{{ video.description }}</p>
                 </div>
               </div>
               <div class="p-2 border-t border-electric-blue bg-opacity-30 mt-auto">
@@ -105,7 +106,7 @@
           <h2 class="section-title text-3xl md:text-4xl font-cyber font-bold text-hot-pink mb-8">
             Latest Uploads
           </h2>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div *ngFor="let video of recentVideos" 
                 class="video-card bg-cyber-black border border-hot-pink rounded-lg overflow-hidden">
               <div class="video-container cursor-pointer" (click)="watchVideo(video)">
@@ -121,7 +122,7 @@
                     </span>
                   </div>
                   <h3 class="text-sm font-bold text-white line-clamp-2">{{ video.title }}</h3>
-                  <p class="text-xs text-gray-300">{{ video.uploadDate | date }}</p>
+                  <p class="text-xs text-gray-300 line-clamp-2">{{ video.description }}</p>
                 </div>
               </div>
               <div class="p-2 border-t border-hot-pink bg-opacity-30 mt-auto">
@@ -153,16 +154,15 @@
             <p class="text-gray-400 mb-2">No genre-based content available.</p>
             <p class="text-xs text-gray-500">Genres will appear here once videos are categorized.</p>
           </div>
-          
-          <!-- Genre Sections -->
+            <!-- Genre Sections -->
           <div *ngFor="let genreSection of genreSidebar" class="mb-8 genre-sidebar-section">
             <div class="genre-sidebar-header mb-4 border-b border-hot-pink pb-2 flex items-center justify-between">
               <h3 class="text-2xl font-cyber font-bold text-electric-blue">{{ genreSection.genre.name }}</h3>
-              <a href="#" class="text-neon-green hover:text-hot-pink text-sm">View All</a>
+              <a [routerLink]="['/genre', urlService.createSlug(genreSection.genre.name)]" class="text-neon-green hover:text-hot-pink text-sm">View All</a>
             </div>
             
             <!-- Vertical Video List (9:16 ratio) -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-3 gap-4">
               <div *ngFor="let video of genreSection.videos" 
                   class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer"
                   (click)="watchVideo(video)">
@@ -192,12 +192,11 @@
               </div>
             </div>
           </div>
-          
-          <!-- Promo Banner -->
+            <!-- Promo Banner -->
           <div class="sidebar-promo mt-8 p-6 rounded-lg bg-gradient-to-r from-deep-purple to-hot-pink text-white">
             <h3 class="text-xl font-bold mb-2">Discover More Genres</h3>
             <p class="mb-4 text-sm">Explore our full library of videos organized by genre.</p>
-            <button class="bg-white text-hot-pink font-bold py-2 px-4 rounded-lg text-sm">
+            <button [routerLink]="['/videos']" class="bg-white text-hot-pink font-bold py-2 px-4 rounded-lg text-sm">
               Browse Library
             </button>
           </div>
