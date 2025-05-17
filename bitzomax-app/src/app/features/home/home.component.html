@@ -36,7 +36,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div *ngFor="let video of featuredVideos" 
                 class="video-card bg-cyber-black border border-neon-green rounded-lg overflow-hidden">
-              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video)">
                 <img [src]="video.thumbnailUrl" 
                     [alt]="video.title" 
                     class="w-full h-full">
@@ -71,7 +71,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             <div *ngFor="let video of popularVideos" 
                 class="video-card bg-cyber-black border border-electric-blue rounded-lg overflow-hidden">
-              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video)">
                 <img [src]="video.thumbnailUrl" 
                     [alt]="video.title" 
                     class="w-full h-full">
@@ -108,7 +108,7 @@
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             <div *ngFor="let video of recentVideos" 
                 class="video-card bg-cyber-black border border-hot-pink rounded-lg overflow-hidden">
-              <div class="video-container cursor-pointer" (click)="watchVideo(video.id)">
+              <div class="video-container cursor-pointer" (click)="watchVideo(video)">
                 <img [src]="video.thumbnailUrl" 
                     [alt]="video.title" 
                     class="w-full h-full">
@@ -165,7 +165,7 @@
             <div class="grid grid-cols-2 gap-4">
               <div *ngFor="let video of genreSection.videos" 
                   class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer"
-                  (click)="watchVideo(video.id)">
+                  (click)="watchVideo(video)">
                 <!-- 9:16 aspect ratio container -->
                 <div class="relative pb-[177.78%]">
                   <video #previewVideo class="w-full h-full object-contain hidden" [src]="video.videoUrl" preload="metadata" 

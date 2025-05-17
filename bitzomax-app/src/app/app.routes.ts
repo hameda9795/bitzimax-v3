@@ -8,7 +8,8 @@ export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'home', redirectTo: '', pathMatch: 'full' },
   { path: 'videos', component: HomeComponent },
-  { path: 'video/:id', component: VideoComponent, data: { renderMode: 'client' } },
+  { path: 'video/:id/:slug', component: VideoComponent, data: { renderMode: 'client' } },
+  { path: 'video/:id', redirectTo: 'video/:id/untitled', pathMatch: 'full' },
   { path: 'profile', component: ProfileComponent },
   { 
     path: 'admin', 

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpParams, Ht
 import { BehaviorSubject, Observable, of, throwError, catchError, map, tap } from 'rxjs';
 import { Video } from '../../shared/models/video.model';
 import { PageRequest, PageResponse } from '../../shared/models/pagination.model';
+import { UrlService } from './url.service';
 
 // Backend API response interfaces
 interface VideoResponse {
@@ -77,7 +78,7 @@ export class VideoService {
   private videosSubject = new BehaviorSubject<Video[]>([]);
   public videos$ = this.videosSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private urlService: UrlService) {
     console.log('VideoService initialized with API URL:', this.apiUrl);
     
     // Verify API URL is accessible
@@ -610,5 +611,10 @@ export class VideoService {
         duration: actualDuration
       });
     }
+  }
+
+  getShareUrl(video: Video): string {
+    const slug = this.urlService.createSlug(video.title);
+    return `${window.location.origin}/video/${video.id}/${slug}`;
   }
 }

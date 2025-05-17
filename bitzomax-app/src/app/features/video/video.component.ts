@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, AfterViewInit, QueryList, ViewChildren } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subscription, of, switchMap, tap, delay } from 'rxjs';
 import { SubscriptionService } from '../../core/services/subscription.service';
 import { VideoService } from '../../core/services/video.service';
@@ -7,6 +7,7 @@ import { UserService } from '../../core/services/user.service';
 import { Video } from '../../shared/models/video.model';
 import { CommonModule } from '@angular/common';
 import { ShareModalComponent } from './share-modal/share-modal.component';
+import { UrlService } from '../../core/services/url.service';
 
 @Component({  selector: 'app-video',
   templateUrl: './video.component.html',
@@ -33,25 +34,37 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private videoService: VideoService,
     private userService: UserService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private urlService: UrlService
   ) { }
 
   ngOnInit(): void {
-    // Get video ID from route params
     this.subscriptions.add(
       this.route.paramMap.pipe(
         switchMap(params => {
-          const videoId = params.get('id');
+          const videoId = params.get('id')?.split('-')[0]; // Get the numeric ID part
           if (!videoId) {
             return of(null);
           }
           
-          // Load video data
           return this.videoService.getVideoById(videoId).pipe(
             tap(video => {
               if (video) {
+                // Check if URL needs to be updated with proper slug
+                const currentSlug = params.get('slug');
+                const properSlug = this.urlService.createSlug(video.title);
+                
+                if (currentSlug !== properSlug) {
+                  // Update URL without reloading the page
+                  this.router.navigate(['/video', videoId, properSlug], {
+                    replaceUrl: true,
+                    skipLocationChange: false
+                  });
+                }
+
                 // Process video URLs
                 this.video = {
                   ...video,

@@ -8,6 +8,7 @@ import { Genre } from '../../shared/models/genre.model';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { SubscriptionService } from '../../core/services/subscription.service';
+import { UrlService } from '../../core/services/url.service';
 
 interface GenreSidebar {
   genre: Genre;
@@ -36,7 +37,8 @@ export class HomeComponent implements OnInit {
     private userService: UserService,
     private genreService: GenreService,
     private router: Router,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private urlService: UrlService
   ) { }
 
   ngOnInit(): void {
@@ -124,8 +126,9 @@ export class HomeComponent implements OnInit {
   /**
    * Navigate to video detail page
    */
-  watchVideo(videoId: string): void {
-    this.router.navigate(['/video', videoId]);
+  watchVideo(video: Video): void {
+    const slug = this.urlService.createSlug(video.title);
+    this.router.navigate(['/video', video.id, slug]);
   }
 
   /**

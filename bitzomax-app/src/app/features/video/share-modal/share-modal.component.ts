@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { Video } from '../../../shared/models/video.model';
+import { VideoService } from '../../../core/services/video.service';
 
 @Component({
   selector: 'app-share-modal',
@@ -205,14 +206,14 @@ import { Video } from '../../../shared/models/video.model';
   `]
 })
 export class ShareModalComponent implements OnInit {
-  @Input() video: Video | null = null;
+  @Input() video!: Video;
   @Input() isVisible = false;
   @Output() closed = new EventEmitter<void>();
   
   shareUrl = '';
   copied = false;
   
-  constructor() {}
+  constructor(private videoService: VideoService) {}
   
   ngOnInit() {
     // Create share URL based on current location
@@ -260,5 +261,9 @@ export class ShareModalComponent implements OnInit {
     setTimeout(() => {
       this.copied = false;
     }, 3000);
+  }
+  
+  getShareUrl(): string {
+    return this.videoService.getShareUrl(this.video);
   }
 }
