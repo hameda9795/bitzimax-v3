@@ -20,11 +20,11 @@
           <div class="video-container vertical-video">
             <video #videoPlayer 
                    class="w-full h-full" 
-                   [poster]="video.thumbnailUrl" 
+                   [poster]="video?.thumbnailUrl" 
                    (timeupdate)="checkVideoTime()"
                    (click)="togglePlayPause()"
                    preload="auto">
-              <source [src]="video.videoUrl" type="video/mp4">
+              <source [src]="video?.videoUrl" type="video/mp4">
               Your browser does not support the video tag.
             </video>
             
@@ -89,21 +89,21 @@
         <!-- Video Info Card -->
         <div class="bg-cyber-black bg-opacity-60 border border-electric-blue p-6 rounded-lg mb-6">
           <div class="flex items-center justify-between mb-2">
-            <h1 class="text-2xl font-bold text-electric-blue">{{ video.title }}</h1>
-            <span *ngIf="video.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
+            <h1 class="text-2xl font-bold text-electric-blue">{{ video?.title }}</h1>
+            <span *ngIf="video?.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
           </div>
           
           <div class="flex items-center text-sm text-neon-green mb-4">
-            <span>{{ video.views | number }} views</span>
+            <span>{{ video?.views | number }} views</span>
             <span class="mx-2">•</span>
-            <span>{{ video.uploadDate | date }}</span>
+            <span>{{ video?.uploadDate | date }}</span>
           </div>
           
-          <p class="text-white mb-6">{{ video.description }}</p>
+          <p class="text-white mb-6">{{ video?.description }}</p>
           
           <!-- Tags -->
           <div class="mt-4 flex flex-wrap gap-2">
-            <span *ngFor="let tag of video.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
+            <span *ngFor="let tag of video?.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
               #{{ tag }}
             </span>
           </div>
@@ -184,11 +184,11 @@
         <div class="video-container vertical-video">
           <video #videoPlayer 
                  class="w-full h-full" 
-                 [poster]="video.thumbnailUrl" 
+                 [poster]="video?.thumbnailUrl" 
                  (timeupdate)="checkVideoTime()"
                  (click)="togglePlayPause()"
                  preload="auto">
-            <source [src]="video.videoUrl" type="video/mp4">
+            <source [src]="video?.videoUrl" type="video/mp4">
             Your browser does not support the video tag.
           </video>
           
@@ -252,23 +252,23 @@
         <!-- Main Info Card -->
         <div class="bg-cyber-black bg-opacity-60 border border-electric-blue p-6 rounded-lg mb-6">
           <div class="flex items-center justify-between mb-2">
-            <h1 class="text-3xl font-bold text-electric-blue">{{ video.title }}</h1>
-            <span *ngIf="video.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
+            <h1 class="text-3xl font-bold text-electric-blue">{{ video?.title }}</h1>
+            <span *ngIf="video?.isPremium" class="bg-hot-pink px-3 py-1 rounded-full text-white text-sm font-bold">PREMIUM</span>
           </div>
           
           <div class="flex items-center text-sm text-neon-green mb-4">
-            <span>{{ video.views | number }} views</span>
+            <span>{{ video?.views | number }} views</span>
             <span class="mx-2">•</span>
-            <span>{{ video.uploadDate | date }}</span>
-            <span *ngIf="video.commentCount" class="mx-2">•</span>
-            <span *ngIf="video.commentCount">{{ video.commentCount }} comments</span>
+            <span>{{ video?.uploadDate | date }}</span>
+            <span *ngIf="video?.commentCount" class="mx-2">•</span>
+            <span *ngIf="video?.commentCount">{{ video?.commentCount }} comments</span>
           </div>
           
-          <p class="text-white mb-6">{{ video.description }}</p>
+          <p class="text-white mb-6">{{ video?.description }}</p>
           
           <!-- Tags -->
           <div class="mt-4 flex flex-wrap gap-2">
-            <span *ngFor="let tag of video.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
+            <span *ngFor="let tag of video?.tags" class="bg-deep-purple px-3 py-1 rounded-full text-electric-blue text-xs hover:bg-hot-pink hover:text-white transition-colors cursor-pointer">
               #{{ tag }}
             </span>
           </div>
@@ -440,6 +440,7 @@
 
   <!-- Share Modal -->
   <app-share-modal 
+    *ngIf="video"
     [video]="video" 
     [isVisible]="showShareModal"
     (closed)="closeShareModal()">
