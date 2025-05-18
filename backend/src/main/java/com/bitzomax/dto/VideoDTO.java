@@ -34,6 +34,14 @@ public class VideoDTO {
     private ConversionStatus conversionStatus;
     private Boolean isVisible;
     private GenreDTO genre;
+    
+    // Store links for different music platforms
+    private String spotifyUrl;
+    private String appleMusicUrl;
+    private String itunesUrl;
+    private String instagramUrl;
+    private String youtubeMusicUrl;
+    private String amazonMusicUrl;
 
     // Constructors
     public VideoDTO() {
@@ -231,7 +239,53 @@ public class VideoDTO {
         this.genre = genre;
     }
 
-    /**
+    public String getSpotifyUrl() {
+        return spotifyUrl;
+    }
+
+    public void setSpotifyUrl(String spotifyUrl) {
+        this.spotifyUrl = spotifyUrl;
+    }
+
+    public String getAppleMusicUrl() {
+        return appleMusicUrl;
+    }
+
+    public void setAppleMusicUrl(String appleMusicUrl) {
+        this.appleMusicUrl = appleMusicUrl;
+    }
+
+    public String getItunesUrl() {
+        return itunesUrl;
+    }
+
+    public void setItunesUrl(String itunesUrl) {
+        this.itunesUrl = itunesUrl;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getYoutubeMusicUrl() {
+        return youtubeMusicUrl;
+    }
+
+    public void setYoutubeMusicUrl(String youtubeMusicUrl) {
+        this.youtubeMusicUrl = youtubeMusicUrl;
+    }
+
+    public String getAmazonMusicUrl() {
+        return amazonMusicUrl;
+    }
+
+    public void setAmazonMusicUrl(String amazonMusicUrl) {
+        this.amazonMusicUrl = amazonMusicUrl;
+    }    /**
      * Convert a Video entity to VideoDTO
      *
      * @param video The Video entity to convert
@@ -250,6 +304,13 @@ public class VideoDTO {
         dto.setIsPremium(video.getIsPremium());
         dto.setUploadDate(video.getUploadDate());
         dto.setTags(video.getTags());
+        // Store links
+        dto.setSpotifyUrl(video.getSpotifyUrl());
+        dto.setAppleMusicUrl(video.getAppleMusicUrl());
+        dto.setItunesUrl(video.getItunesUrl());
+        dto.setInstagramUrl(video.getInstagramUrl());
+        dto.setYoutubeMusicUrl(video.getYoutubeMusicUrl());
+        dto.setAmazonMusicUrl(video.getAmazonMusicUrl());
         dto.setPoemText(video.getPoemText());
         dto.setHashtags(video.getHashtags());
         dto.setSeoTitle(video.getSeoTitle());

@@ -50,6 +50,19 @@ public class Video {
 
     private String seoTitle;
 
+    // Store links for different music platforms
+    private String spotifyUrl;
+
+    private String appleMusicUrl;
+
+    private String itunesUrl;
+
+    private String instagramUrl;
+
+    private String youtubeMusicUrl;
+
+    private String amazonMusicUrl;
+
     @Enumerated(EnumType.STRING)
     private ConversionStatus conversionStatus;
     
@@ -220,6 +233,54 @@ public class Video {
 
     public void setSeoTitle(String seoTitle) {
         this.seoTitle = seoTitle;
+    }
+
+    public String getSpotifyUrl() {
+        return spotifyUrl;
+    }
+
+    public void setSpotifyUrl(String spotifyUrl) {
+        this.spotifyUrl = spotifyUrl;
+    }
+
+    public String getAppleMusicUrl() {
+        return appleMusicUrl;
+    }
+
+    public void setAppleMusicUrl(String appleMusicUrl) {
+        this.appleMusicUrl = appleMusicUrl;
+    }
+
+    public String getItunesUrl() {
+        return itunesUrl;
+    }
+
+    public void setItunesUrl(String itunesUrl) {
+        this.itunesUrl = itunesUrl;
+    }
+
+    public String getInstagramUrl() {
+        return instagramUrl;
+    }
+
+    public void setInstagramUrl(String instagramUrl) {
+        this.instagramUrl = instagramUrl;
+    }
+
+    public String getYoutubeMusicUrl() {
+        return youtubeMusicUrl;
+    }
+
+    public void setYoutubeMusicUrl(String youtubeMusicUrl) {
+        this.youtubeMusicUrl = youtubeMusicUrl;
+    }
+
+    public String getAmazonMusicUrl() {
+        return amazonMusicUrl;
+    }
+
+    public void setAmazonMusicUrl(String amazonMusicUrl) {
+        this.amazonMusicUrl = amazonMusicUrl;
     }
 
     public ConversionStatus getConversionStatus() {

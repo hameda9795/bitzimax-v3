@@ -29,6 +29,14 @@ export interface Video {
   conversionStatus?: string;
   engagementRate?: number; // Calculated engagement metric
   genre?: Genre;
+  
+  // Store links
+  spotifyUrl?: string;     // Link to Spotify
+  appleMusicUrl?: string;  // Link to Apple Music
+  itunesUrl?: string;      // Link to iTunes
+  instagramUrl?: string;   // Link to Instagram
+  youtubeMusicUrl?: string; // Link to YouTube Music
+  amazonMusicUrl?: string; // Link to Amazon Music
 }
 
 /**

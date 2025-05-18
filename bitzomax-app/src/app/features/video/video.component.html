@@ -151,6 +151,54 @@
             </div>
           </div>
           
+          <!-- Store Links -->
+          <div class="mt-6">
+            <h4 class="text-white font-semibold mb-3">Listen On</h4>
+            <div class="flex flex-wrap gap-4">
+              <!-- Spotify -->
+              <a *ngIf="video.spotifyUrl" [href]="video.spotifyUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#1DB954] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Spotify">
+                <i class="fab fa-spotify text-white text-2xl"></i>
+              </a>
+              
+              <!-- Apple Music -->
+              <a *ngIf="video.appleMusicUrl" [href]="video.appleMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#FB233B] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Apple Music">
+                <i class="fab fa-apple text-white text-2xl"></i>
+              </a>
+              
+              <!-- iTunes -->
+              <a *ngIf="video.itunesUrl" [href]="video.itunesUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#9933CC] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Buy on iTunes">
+                <i class="fas fa-music text-white text-xl"></i>
+              </a>
+              
+              <!-- YouTube Music -->
+              <a *ngIf="video.youtubeMusicUrl" [href]="video.youtubeMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#FF0000] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on YouTube Music">
+                <i class="fab fa-youtube text-white text-2xl"></i>
+              </a>
+              
+              <!-- Amazon Music -->
+              <a *ngIf="video.amazonMusicUrl" [href]="video.amazonMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#00A8E1] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Amazon Music">
+                <i class="fab fa-amazon text-white text-2xl"></i>
+              </a>
+              
+              <!-- Instagram -->
+              <a *ngIf="video.instagramUrl" [href]="video.instagramUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#8a3ab9] via-[#e95950] to-[#bc2a8d] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Check on Instagram">
+                <i class="fab fa-instagram text-white text-2xl"></i>
+              </a>
+            </div>
+          </div>
+          
           <!-- Technical Info -->
           <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
             <div *ngIf="video.originalFormat">
@@ -315,6 +363,54 @@
               <span *ngFor="let hashtag of video.hashtags" class="bg-hot-pink bg-opacity-20 px-3 py-1 rounded-full text-hot-pink text-xs hover:bg-hot-pink hover:text-white transition-colors">
                 #{{ hashtag }}
               </span>
+            </div>
+          </div>
+          
+          <!-- Store Links -->
+          <div class="bg-cyber-black bg-opacity-60 p-6 rounded-lg border border-electric-blue">
+            <h4 class="text-electric-blue font-bold mb-4">Listen On</h4>
+            <div class="flex flex-wrap gap-4">
+              <!-- Spotify -->
+              <a *ngIf="video.spotifyUrl" [href]="video.spotifyUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#1DB954] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Spotify">
+                <i class="fab fa-spotify text-white text-2xl"></i>
+              </a>
+              
+              <!-- Apple Music -->
+              <a *ngIf="video.appleMusicUrl" [href]="video.appleMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#FB233B] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Apple Music">
+                <i class="fab fa-apple text-white text-2xl"></i>
+              </a>
+              
+              <!-- iTunes -->
+              <a *ngIf="video.itunesUrl" [href]="video.itunesUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#9933CC] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Buy on iTunes">
+                <i class="fas fa-music text-white text-xl"></i>
+              </a>
+              
+              <!-- YouTube Music -->
+              <a *ngIf="video.youtubeMusicUrl" [href]="video.youtubeMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#FF0000] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on YouTube Music">
+                <i class="fab fa-youtube text-white text-2xl"></i>
+              </a>
+              
+              <!-- Amazon Music -->
+              <a *ngIf="video.amazonMusicUrl" [href]="video.amazonMusicUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-[#00A8E1] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Listen on Amazon Music">
+                <i class="fab fa-amazon text-white text-2xl"></i>
+              </a>
+              
+              <!-- Instagram -->
+              <a *ngIf="video.instagramUrl" [href]="video.instagramUrl" target="_blank" rel="noopener" 
+                 class="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#8a3ab9] via-[#e95950] to-[#bc2a8d] hover:bg-opacity-90 transition-all transform hover:scale-110"
+                 aria-label="Check on Instagram">
+                <i class="fab fa-instagram text-white text-2xl"></i>
+              </a>
             </div>
           </div>
           

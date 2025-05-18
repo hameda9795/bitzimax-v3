@@ -18,9 +18,7 @@ public class VideoMapper {
     @Autowired
     public VideoMapper(GenreMapper genreMapper) {
         this.genreMapper = genreMapper;
-    }
-
-    /**
+    }    /**
      * Convert Video entity to VideoDTO
      */
     public VideoDTO toDto(Video video) {
@@ -52,6 +50,14 @@ public class VideoMapper {
         dto.setConversionStatus(video.getConversionStatus());
         dto.setIsVisible(video.getIsVisible());
         
+        // Map store links
+        dto.setSpotifyUrl(video.getSpotifyUrl());
+        dto.setAppleMusicUrl(video.getAppleMusicUrl());
+        dto.setItunesUrl(video.getItunesUrl());
+        dto.setInstagramUrl(video.getInstagramUrl());
+        dto.setYoutubeMusicUrl(video.getYoutubeMusicUrl());
+        dto.setAmazonMusicUrl(video.getAmazonMusicUrl());
+        
         // Map genre if available
         if (video.getGenre() != null) {
             dto.setGenre(genreMapper.toDTO(video.getGenre()));
@@ -59,8 +65,7 @@ public class VideoMapper {
         
         return dto;
     }
-    
-    /**
+      /**
      * Convert VideoDTO to Video entity
      */
     public Video toEntity(VideoDTO dto) {
@@ -91,6 +96,14 @@ public class VideoMapper {
         video.setSeoKeywords(dto.getSeoKeywords());
         video.setConversionStatus(dto.getConversionStatus());
         video.setIsVisible(dto.getIsVisible());
+        
+        // Map store links
+        video.setSpotifyUrl(dto.getSpotifyUrl());
+        video.setAppleMusicUrl(dto.getAppleMusicUrl());
+        video.setItunesUrl(dto.getItunesUrl());
+        video.setInstagramUrl(dto.getInstagramUrl());
+        video.setYoutubeMusicUrl(dto.getYoutubeMusicUrl());
+        video.setAmazonMusicUrl(dto.getAmazonMusicUrl());
         
         // Handle genre conversion if present
         if (dto.getGenre() != null) {
