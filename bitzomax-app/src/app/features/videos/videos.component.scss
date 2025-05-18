@@ -1,0 +1,127 @@
+// Video card animations and styles
+.video-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 0, 128, 0.15);
+  }
+
+  .video-container {
+    aspect-ratio: 9/16;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: rgba(0, 0, 0, 0.2);
+      transition: transform 0.5s ease;
+      border-radius: 4px;
+    }
+    
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+}
+
+.video-info-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0) 100%);
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  border-radius: 4px;
+  
+  .video-card:hover & {
+    opacity: 1;
+  }
+}
+
+// Videos banner styling
+.videos-banner {
+  background: linear-gradient(135deg, rgba(255,0,128,0.3) 0%, rgba(0,229,255,0.3) 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      linear-gradient(45deg, rgba(0,0,0,0) 45%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 55%),
+      linear-gradient(-45deg, rgba(0,0,0,0) 45%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 55%);
+    background-size: 200% 200%;
+    animation: shimmer 3s infinite linear;
+    z-index: 1;
+  }
+  
+  .videos-banner-content {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 200%;
+  }
+  100% {
+    background-position: -200% -200%;
+  }
+}
+
+// Genre section styling
+.genre-section {
+  margin-bottom: 1.5rem;
+  
+  .genre-header {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, rgba(255,0,128,0.8), rgba(0,229,255,0.8), rgba(255,0,128,0.8));
+      z-index: 1;
+    }
+  }
+}
+
+// Sidebar styling
+.sidebar-video-card {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  
+  &:hover {
+    border-color: var(--electric-blue);
+    background-color: rgba(19, 26, 47, 0.5);
+  }
+}
+
+.sidebar-promo {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg) translate(50px, -80px);
+    z-index: 1;
+  }
+}

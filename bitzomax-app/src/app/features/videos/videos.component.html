@@ -1,0 +1,201 @@
+<section class="min-h-screen bg-cyber-black">
+  <!-- Page Banner Section -->
+  <div class="videos-banner mb-8">
+    <div class="videos-banner-content container mx-auto px-4 py-8">
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-cyber font-bold text-white mb-4 glitch-text">
+        Video Library
+      </h1>
+      <p class="text-lg md:text-xl text-gray-200 mb-4 font-light">
+        Explore our collection of videos organized by genre
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="flex justify-center items-center min-h-[300px]">
+    <div class="loader">
+      <div class="w-16 h-16 border-t-4 border-b-4 border-neon-green rounded-full animate-spin"></div>
+    </div>
+  </div>
+
+  <!-- Main Content with Sidebar -->
+  <div *ngIf="!loading" class="container mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Main Content - Genre Grid -->
+      <div class="lg:w-8/12">
+        <div *ngIf="genreGroups.length === 0" class="text-center py-16">
+          <mat-icon class="text-hot-pink text-6xl mb-4">video_library</mat-icon>
+          <h2 class="text-2xl font-bold text-electric-blue mb-2">No videos found</h2>
+          <p class="text-gray-400">There are no videos available yet.</p>
+        </div>
+        
+        <!-- Genre Grid - 2 genres per row -->
+        <div class="space-y-12">
+          <!-- Loop through genreGroups in pairs -->
+          <ng-container *ngFor="let i of [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]; let rowIndex = index">
+            <div *ngIf="genreGroups[i] || genreGroups[i+1]" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              <!-- First Genre in the Row -->
+              <div *ngIf="genreGroups[i]" class="genre-section">
+                <div class="genre-header mb-4 border-b border-hot-pink pb-2 flex items-center justify-between">
+                  <h2 class="text-2xl font-cyber font-bold text-electric-blue">{{ genreGroups[i].genre.name }}</h2>
+                  <a (click)="navigateToGenre(genreGroups[i].genre)" class="text-neon-green hover:text-hot-pink text-sm cursor-pointer">View All</a>
+                </div>
+                
+                <!-- 4 Videos in a Row (9:16 aspect ratio) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div *ngFor="let video of genreGroups[i].videos" 
+                      class="video-card cursor-pointer"
+                      (click)="watchVideo(video)">
+                    <div class="video-container">
+                      <img [src]="video.thumbnailUrl" 
+                          [alt]="video.title" 
+                          class="w-full h-full object-cover">
+                      
+                      <!-- Video Info Overlay -->
+                      <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                          <span *ngIf="video.isPremium" 
+                                class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                            PRO
+                          </span>
+                        </div>
+                        <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Second Genre in the Row -->
+              <div *ngIf="genreGroups[i+1]" class="genre-section">
+                <div class="genre-header mb-4 border-b border-hot-pink pb-2 flex items-center justify-between">
+                  <h2 class="text-2xl font-cyber font-bold text-electric-blue">{{ genreGroups[i+1].genre.name }}</h2>
+                  <a (click)="navigateToGenre(genreGroups[i+1].genre)" class="text-neon-green hover:text-hot-pink text-sm cursor-pointer">View All</a>
+                </div>
+                
+                <!-- 4 Videos in a Row (9:16 aspect ratio) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div *ngFor="let video of genreGroups[i+1].videos" 
+                      class="video-card cursor-pointer"
+                      (click)="watchVideo(video)">
+                    <div class="video-container">
+                      <img [src]="video.thumbnailUrl" 
+                          [alt]="video.title" 
+                          class="w-full h-full object-cover">
+                      
+                      <!-- Video Info Overlay -->
+                      <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                          <span *ngIf="video.isPremium" 
+                                class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                            PRO
+                          </span>
+                        </div>
+                        <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      
+      <!-- Sidebar Content -->
+      <div class="lg:w-4/12">
+        <div class="sticky top-8">
+          <!-- Latest Videos Section -->
+          <div class="mb-8">
+            <div class="mb-4 border-b border-electric-blue pb-2">
+              <h2 class="text-2xl font-cyber font-bold text-hot-pink mb-2">Latest Videos</h2>
+            </div>
+            
+            <!-- Latest Videos List -->
+            <div class="space-y-4">
+              <div *ngFor="let video of latestVideos" 
+                  class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer flex gap-3 hover:bg-cyber-dark p-2"
+                  (click)="watchVideo(video)">
+                <!-- Thumbnail with 9:16 aspect ratio -->
+                <div class="relative w-16">
+                  <div class="pb-[177.78%] relative">
+                    <img [src]="video.thumbnailUrl" 
+                        [alt]="video.title" 
+                        class="absolute inset-0 w-full h-full object-cover rounded">
+                    
+                    <!-- Premium Badge -->
+                    <span *ngIf="video.isPremium" 
+                          class="absolute top-1 right-1 bg-hot-pink text-white px-1 py-0.5 rounded-full text-[10px]">
+                      PRO
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Video Info -->
+                <div class="flex-1 flex flex-col justify-center">
+                  <h4 class="text-sm font-bold line-clamp-2 text-white">{{ video.title }}</h4>
+                  <div class="flex items-center mt-1">
+                    <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                    <span class="mx-2 text-gray-500">•</span>
+                    <span class="text-electric-blue text-xs">{{ video.views }} views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Popular Videos Section -->
+          <div class="mb-8">
+            <div class="mb-4 border-b border-electric-blue pb-2">
+              <h2 class="text-2xl font-cyber font-bold text-hot-pink mb-2">Popular Videos</h2>
+            </div>
+            
+            <!-- Popular Videos List -->
+            <div class="space-y-4">
+              <div *ngFor="let video of popularVideos" 
+                  class="sidebar-video-card overflow-hidden rounded-lg relative cursor-pointer flex gap-3 hover:bg-cyber-dark p-2"
+                  (click)="watchVideo(video)">
+                <!-- Thumbnail with 9:16 aspect ratio -->
+                <div class="relative w-16">
+                  <div class="pb-[177.78%] relative">
+                    <img [src]="video.thumbnailUrl" 
+                        [alt]="video.title" 
+                        class="absolute inset-0 w-full h-full object-cover rounded">
+                    
+                    <!-- Premium Badge -->
+                    <span *ngIf="video.isPremium" 
+                          class="absolute top-1 right-1 bg-hot-pink text-white px-1 py-0.5 rounded-full text-[10px]">
+                      PRO
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Video Info -->
+                <div class="flex-1 flex flex-col justify-center">
+                  <h4 class="text-sm font-bold line-clamp-2 text-white">{{ video.title }}</h4>
+                  <div class="flex items-center mt-1">
+                    <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                    <span class="mx-2 text-gray-500">•</span>
+                    <span class="text-electric-blue text-xs">{{ video.views }} views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Premium Promo Banner -->
+          <div *ngIf="!isSubscribed" class="sidebar-promo mt-8 p-6 rounded-lg bg-gradient-to-r from-deep-purple to-hot-pink text-white">
+            <h3 class="text-xl font-bold mb-2">Unlock Premium Content</h3>
+            <p class="mb-4 text-sm">Get access to all premium videos and exclusive content.</p>
+            <button routerLink="/profile" class="bg-white text-hot-pink font-bold py-2 px-4 rounded-lg text-sm">
+              Upgrade Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
