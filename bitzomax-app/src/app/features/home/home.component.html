@@ -1,6 +1,8 @@
 <section class="min-h-screen bg-cyber-black">
   <!-- Hero Section -->
   <div class="relative hero-section py-16 md:py-24 overflow-hidden">
+    <!-- Background image for hero section as CSS background, not <img> -->
+    <div class="hero-bg-image"></div>
     <div class="container mx-auto px-4">
       <div class="relative z-10 max-w-4xl mx-auto text-center">
         <h1 class="text-5xl sm:text-6xl md:text-7xl font-cyber font-bold text-neon-green mb-6 glitch-text" data-text="BITZOMAX CYBER STREAM">
@@ -20,7 +22,7 @@
       </div>
     </div>
     <!-- Animated background effect -->
-    <div class="absolute inset-0 bg-gradient-to-r from-deep-purple via-hot-pink to-electric-blue opacity-10"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-deep-purple via-hot-pink to-electric-blue opacity-10" style="z-index:2;"></div>
   </div>
 
   <!-- Main Content with Sidebar -->
