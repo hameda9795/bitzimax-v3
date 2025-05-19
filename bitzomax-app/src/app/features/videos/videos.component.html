@@ -42,26 +42,54 @@
                   <a (click)="navigateToGenre(genreGroups[i].genre)" class="text-neon-green hover:text-hot-pink text-sm cursor-pointer">View All</a>
                 </div>
                 
-                <!-- 4 Videos in a Row (9:16 aspect ratio) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div *ngFor="let video of genreGroups[i].videos" 
-                      class="video-card cursor-pointer"
-                      (click)="watchVideo(video)">
-                    <div class="video-container">
-                      <img [src]="video.thumbnailUrl" 
-                          [alt]="video.title" 
-                          class="w-full h-full object-cover">
-                      
-                      <!-- Video Info Overlay -->
-                      <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
-                        <div class="flex items-center justify-between mb-1">
-                          <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
-                          <span *ngIf="video.isPremium" 
-                                class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
-                            PRO
-                          </span>
+                <!-- 2 rows with 2 videos per row -->
+                <div class="space-y-4">
+                  <!-- First row -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div *ngFor="let video of genreGroups[i].videos.slice(0, 2)" 
+                        class="video-card cursor-pointer"
+                        (click)="watchVideo(video)">
+                      <div class="video-container">
+                        <img [src]="video.thumbnailUrl" 
+                            [alt]="video.title" 
+                            class="w-full h-full object-cover">
+                        
+                        <!-- Video Info Overlay -->
+                        <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                          <div class="flex items-center justify-between mb-1">
+                            <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                            <span *ngIf="video.isPremium" 
+                                  class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                              PRO
+                            </span>
+                          </div>
+                          <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
                         </div>
-                        <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Second row -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div *ngFor="let video of genreGroups[i].videos.slice(2, 4)" 
+                        class="video-card cursor-pointer"
+                        (click)="watchVideo(video)">
+                      <div class="video-container">
+                        <img [src]="video.thumbnailUrl" 
+                            [alt]="video.title" 
+                            class="w-full h-full object-cover">
+                        
+                        <!-- Video Info Overlay -->
+                        <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                          <div class="flex items-center justify-between mb-1">
+                            <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                            <span *ngIf="video.isPremium" 
+                                  class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                              PRO
+                            </span>
+                          </div>
+                          <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -75,26 +103,54 @@
                   <a (click)="navigateToGenre(genreGroups[i+1].genre)" class="text-neon-green hover:text-hot-pink text-sm cursor-pointer">View All</a>
                 </div>
                 
-                <!-- 4 Videos in a Row (9:16 aspect ratio) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div *ngFor="let video of genreGroups[i+1].videos" 
-                      class="video-card cursor-pointer"
-                      (click)="watchVideo(video)">
-                    <div class="video-container">
-                      <img [src]="video.thumbnailUrl" 
-                          [alt]="video.title" 
-                          class="w-full h-full object-cover">
-                      
-                      <!-- Video Info Overlay -->
-                      <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
-                        <div class="flex items-center justify-between mb-1">
-                          <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
-                          <span *ngIf="video.isPremium" 
-                                class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
-                            PRO
-                          </span>
+                <!-- 2 rows with 2 videos per row -->
+                <div class="space-y-4">
+                  <!-- First row -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div *ngFor="let video of genreGroups[i+1].videos.slice(0, 2)" 
+                        class="video-card cursor-pointer"
+                        (click)="watchVideo(video)">
+                      <div class="video-container">
+                        <img [src]="video.thumbnailUrl" 
+                            [alt]="video.title" 
+                            class="w-full h-full object-cover">
+                        
+                        <!-- Video Info Overlay -->
+                        <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                          <div class="flex items-center justify-between mb-1">
+                            <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                            <span *ngIf="video.isPremium" 
+                                  class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                              PRO
+                            </span>
+                          </div>
+                          <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
                         </div>
-                        <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Second row -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div *ngFor="let video of genreGroups[i+1].videos.slice(2, 4)" 
+                        class="video-card cursor-pointer"
+                        (click)="watchVideo(video)">
+                      <div class="video-container">
+                        <img [src]="video.thumbnailUrl" 
+                            [alt]="video.title" 
+                            class="w-full h-full object-cover">
+                        
+                        <!-- Video Info Overlay -->
+                        <div class="video-info-overlay absolute inset-0 p-2 flex flex-col justify-end">
+                          <div class="flex items-center justify-between mb-1">
+                            <span class="text-neon-green text-xs">{{ formatDuration(video.duration) }}</span>
+                            <span *ngIf="video.isPremium" 
+                                  class="bg-hot-pink text-white px-1.5 py-0.5 rounded-full text-xs">
+                              PRO
+                            </span>
+                          </div>
+                          <h4 class="text-sm font-bold line-clamp-1 text-white">{{ video.title }}</h4>
+                        </div>
                       </div>
                     </div>
                   </div>
