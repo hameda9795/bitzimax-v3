@@ -1,0 +1,35 @@
+-------------------------------------------------------------------------------
+Test set: com.bitzomax.service.UserServiceTest
+-------------------------------------------------------------------------------
+Tests run: 7, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.204 s <<< FAILURE! -- in com.bitzomax.service.UserServiceTest
+com.bitzomax.service.UserServiceTest.removeFavoriteVideo -- Time elapsed: 0.009 s <<< FAILURE!
+Wanted but not invoked:
+favoriteVideoRepository.deleteByUserIdAndVideoId(
+    1L,
+    1L
+);
+-> at com.bitzomax.service.UserServiceTest.removeFavoriteVideo(UserServiceTest.java:146)
+
+However, there was exactly 1 interaction with this mock:
+favoriteVideoRepository.findByUserIdAndVideoId(
+    1L,
+    1L
+);
+-> at com.bitzomax.service.UserService.removeFromFavorites(UserService.java:99)
+
+
+	at com.bitzomax.service.UserServiceTest.removeFavoriteVideo(UserServiceTest.java:146)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.bitzomax.service.UserServiceTest.unlikeVideo -- Time elapsed: 0.003 s <<< ERROR!
+jakarta.persistence.EntityNotFoundException: Video not found with ID: 1
+	at com.bitzomax.service.UserService.lambda$unlikeVideo$8(UserService.java:262)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at com.bitzomax.service.UserService.unlikeVideo(UserService.java:262)
+	at com.bitzomax.service.UserServiceTest.unlikeVideo(UserServiceTest.java:175)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -10,9 +10,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ import java.util.Map;
  * REST controller for admin video management operations
  */
 @RestController
-@RequestMapping("/admin/videos")
+@RequestMapping("/api/admin/videos")
 public class AdminVideoController {
     
     private final VideoService videoService;
@@ -123,13 +123,14 @@ public class AdminVideoController {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating video: " + e.getMessage(), e);
         }
-    }
-    
-    /**
+    }    /**
      * Get all videos with pagination, sorting and filtering options
      * GET /admin/videos
      * 
-     * @param pageable pagination and sorting information
+     * @param page the page number (0-based)
+     * @param size the page size
+     * @param sort the field to sort by
+     * @param direction the sort direction (asc or desc)
      * @param title filter by title (optional)
      * @param isPremium filter by premium status (optional)
      * @param tag filter by tag (optional)
@@ -140,13 +141,26 @@ public class AdminVideoController {
      */
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllVideos(
-            @PageableDefault(size = 10, sort = "uploadDate", direction = Direction.DESC) Pageable pageable,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "uploadDate") String sortField,
+            @RequestParam(defaultValue = "desc") String direction,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) Boolean isPremium,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
+        
+        // Create Pageable object from request parameters
+        Sort sort;
+        if (direction.equalsIgnoreCase("asc")) {
+            sort = Sort.by(Sort.Direction.ASC, sortField);
+        } else {
+            sort = Sort.by(Sort.Direction.DESC, sortField);
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
         
         // In a real application, we would pass these filters to the service layer
         // For now, we'll just get all videos with pagination
@@ -289,6 +303,79 @@ public class AdminVideoController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating thumbnail: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Update video visibility
+     * PUT /api/admin/videos/{id}/visibility
+     *
+     * @param id the video ID
+     * @param request the request containing isVisible flag
+     * @return success message
+     */
+    @PutMapping("/{id}/visibility")
+    public ResponseEntity<?> updateVideoVisibility(
+            @PathVariable Long id, 
+            @RequestBody Map<String, Boolean> request) {
+        try {
+            Boolean isVisible = request.get("isVisible");
+            if (isVisible == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "isVisible parameter is required");
+            }
+            
+            videoService.updateVideoVisibility(id, isVisible);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", id);
+            response.put("isVisible", isVisible);
+            response.put("message", "Video visibility updated successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating video visibility: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Update video conversion status
+     * PUT /api/admin/videos/{id}/conversion-status
+     *
+     * @param id the video ID
+     * @param request the request containing status
+     * @return success message
+     */
+    @PutMapping("/{id}/conversion-status")
+    public ResponseEntity<?> updateVideoConversionStatus(
+            @PathVariable Long id, 
+            @RequestBody Map<String, String> request) {
+        try {
+            String statusStr = request.get("status");
+            if (statusStr == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status parameter is required");
+            }
+            
+            ConversionStatus status;
+            try {
+                status = ConversionStatus.valueOf(statusStr);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status value: " + statusStr);
+            }
+            
+            videoService.updateVideoConversionStatus(id, status);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", id);
+            response.put("status", status);
+            response.put("message", "Video conversion status updated successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating video conversion status: " + e.getMessage(), e);
         }
     }
 }

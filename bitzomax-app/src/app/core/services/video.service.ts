@@ -252,16 +252,17 @@ export class VideoService {
       shareCount: video.shareCount || 0
     };
   }
-
   /**
    * Get all videos (non-paginated)
    */
   getAllVideos(): Observable<Video[]> {
     this.loadingSubject.next(true);
-    return this.http.get<VideoResponse[]>(this.apiUrl)
+    return this.http.get<any>(this.apiUrl)
       .pipe(
-        map((videos: VideoResponse[]): Video[] => {
-          return videos.map(video => this.convertVideoResponse(video));
+        map((response: any): Video[] => {
+          // Handle both array response and paginated response with content field
+          const videos = Array.isArray(response) ? response : (response.content || []);
+          return videos.map((video: VideoResponse) => this.convertVideoResponse(video));
         }),
         tap((videos: Video[]): void => {
           console.log('Loaded videos:', videos);

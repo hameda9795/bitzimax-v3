@@ -1,0 +1,27 @@
+-------------------------------------------------------------------------------
+Test set: com.bitzomax.service.SubscriptionServiceTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 1, Errors: 1, Skipped: 0, Time elapsed: 0.175 s <<< FAILURE! -- in com.bitzomax.service.SubscriptionServiceTest
+com.bitzomax.service.SubscriptionServiceTest.cancelNonExistentSubscription -- Time elapsed: 0.004 s <<< ERROR!
+jakarta.persistence.EntityNotFoundException: User not found with id: 999
+	at com.bitzomax.service.SubscriptionService.lambda$cancelSubscription$1(SubscriptionService.java:86)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at com.bitzomax.service.SubscriptionService.cancelSubscription(SubscriptionService.java:86)
+	at com.bitzomax.service.SubscriptionServiceTest.cancelNonExistentSubscription(SubscriptionServiceTest.java:167)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+com.bitzomax.service.SubscriptionServiceTest.cancelSubscription -- Time elapsed: 0.007 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <false> but was: <true>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertFalse.failNotFalse(AssertFalse.java:63)
+	at org.junit.jupiter.api.AssertFalse.assertFalse(AssertFalse.java:36)
+	at org.junit.jupiter.api.AssertFalse.assertFalse(AssertFalse.java:31)
+	at org.junit.jupiter.api.Assertions.assertFalse(Assertions.java:231)
+	at com.bitzomax.service.SubscriptionServiceTest.cancelSubscription(SubscriptionServiceTest.java:151)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+

@@ -5,6 +5,7 @@ public class FileUploadResponse {
     private String fileName;
     private String fileType;
     private String filePath;
+    private String fileUri;
     private long size;
     private int duration;
     
@@ -41,6 +42,14 @@ public class FileUploadResponse {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+    
+    public String getFileUri() {
+        return fileUri;
+    }
+
+    public void setFileUri(String fileUri) {
+        this.fileUri = fileUri;
     }
 
     public long getSize() {
