@@ -118,34 +118,4 @@ stages:
         artifactName: 'frontend'
       displayName: 'Publish Frontend Artifact'
 
-- stage: Deploy
-  dependsOn: Build
-  condition: succeeded()
-  jobs:
-  - deployment: DeployDev
-    displayName: 'Deploy to Development'
-    environment: 'development'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: current
-            artifacts: 
-              - backend
-              - frontend
-            
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: '$(AZURE_SUBSCRIPTION)'
-              appName: '$(BACKEND_APP_NAME)'
-              package: '$(Pipeline.Workspace)/backend/*.jar'
-              deploymentMethod: 'auto'
-            displayName: 'Deploy Backend to Azure App Service'
-            
-          - task: AzureStaticWebApp@0
-            inputs:
-              azureSubscription: '$(AZURE_SUBSCRIPTION)'
-              app_location: '$(Pipeline.Workspace)/frontend'
-              api_location: ''
-              output_location: ''
-            displayName: 'Deploy Frontend to Azure Static Web Apps'
+# Deploy stage temporarily removed for testing build only
