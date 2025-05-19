@@ -1,0 +1,151 @@
+trigger:
+- main
+- develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  NPM_CACHE_FOLDER: $(Pipeline.Workspace)/npm
+
+stages:
+- stage: Build
+  jobs:
+  - job: Backend
+    displayName: 'Build Backend'
+    steps:
+    - task: Cache@2
+      inputs:
+        key: 'maven | "$(Agent.OS)" | backend/pom.xml'
+        restoreKeys: |
+          maven | "$(Agent.OS)"
+        path: $(MAVEN_CACHE_FOLDER)
+      displayName: 'Cache Maven packages'
+
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '21'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+      displayName: 'Setup JDK 21'
+      
+    - script: |
+        cd backend
+        chmod +x mvnw
+        ./mvnw clean package
+      displayName: 'Build Java Backend'
+      
+    - script: |
+        cd backend
+        ./mvnw test
+      displayName: 'Run Backend Tests'
+      
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'backend/target/surefire-reports/TEST-*.xml'
+        mergeTestResults: true
+        testRunTitle: 'Backend Tests'
+      displayName: 'Publish Backend Test Results'
+      
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'JaCoCo'
+        summaryFileLocation: 'backend/target/site/jacoco/jacoco.xml'
+        reportDirectory: 'backend/target/site/jacoco'
+      displayName: 'Publish Backend Code Coverage'
+      continueOnError: true
+      
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'backend/target/*.jar'
+        artifactName: 'backend'
+      displayName: 'Publish Backend Artifact'
+
+  - job: Frontend
+    displayName: 'Build Frontend'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Setup Node.js'
+      
+    - task: Cache@2
+      inputs:
+        key: 'npm | "$(Agent.OS)" | bitzomax-app/package-lock.json'
+        restoreKeys: |
+          npm | "$(Agent.OS)"
+        path: $(NPM_CACHE_FOLDER)
+      displayName: 'Cache NPM packages'
+      
+    - script: |
+        cd bitzomax-app
+        npm ci
+      displayName: 'Install Dependencies'
+      
+    - script: |
+        cd bitzomax-app
+        npm run test -- --watch=false --browsers=ChromeHeadless
+      displayName: 'Run Frontend Tests'
+      continueOnError: true
+      
+    - script: |
+        cd bitzomax-app
+        npm run build -- --configuration=production
+      displayName: 'Build Angular App'
+      
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'bitzomax-app/test-results/junit/*.xml'
+        mergeTestResults: true
+        testRunTitle: 'Frontend Tests'
+      displayName: 'Publish Frontend Test Results'
+      continueOnError: true
+      
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'bitzomax-app/coverage/cobertura-coverage.xml'
+        reportDirectory: 'bitzomax-app/coverage'
+      displayName: 'Publish Frontend Code Coverage'
+      continueOnError: true
+      
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'bitzomax-app/dist/bitzomax'
+        artifactName: 'frontend'
+      displayName: 'Publish Frontend Artifact'
+
+- stage: Deploy
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployDev
+    displayName: 'Deploy to Development'
+    environment: 'development'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifacts: 
+              - backend
+              - frontend
+            
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: '$(AZURE_SUBSCRIPTION)'
+              appName: '$(BACKEND_APP_NAME)'
+              package: '$(Pipeline.Workspace)/backend/*.jar'
+              deploymentMethod: 'auto'
+            displayName: 'Deploy Backend to Azure App Service'
+            
+          - task: AzureStaticWebApp@0
+            inputs:
+              azureSubscription: '$(AZURE_SUBSCRIPTION)'
+              app_location: '$(Pipeline.Workspace)/frontend'
+              api_location: ''
+              output_location: ''
+            displayName: 'Deploy Frontend to Azure Static Web Apps'
