@@ -1,8 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
 import { SubscriptionService } from '../../core/services/subscription.service';
+import { UserService } from '../../core/services/user.service';
+import { VideoService } from '../../core/services/video.service';
+import { Video } from '../../shared/models/video.model';
 
 @Component({
   selector: 'app-profile',
@@ -17,10 +20,18 @@ export class ProfileComponent implements OnInit, OnDestroy {
   subscriptionStartDate: Date = new Date();
   subscriptionEndDate: Date | null = null;
   subscriptionPercentRemaining = 0;
-  
+
+  favoriteVideos: Video[] = [];
+  likedVideos: Video[] = [];
+  viewsCount = 0;
+
   private subscriptions: Subscription = new Subscription();
 
-  constructor(private subscriptionService: SubscriptionService) { }
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private userService: UserService,
+    private videoService: VideoService
+  ) { }
 
   ngOnInit(): void {
     // Subscribe to subscription status changes
@@ -41,6 +52,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // Initial state
     this.isSubscribed = this.subscriptionService.isSubscribed();
+
+    // Load user favorites and liked videos
+    this.userService.getCurrentUser().subscribe(user => {
+      if (!user) {
+        this.favoriteVideos = [];
+        this.likedVideos = [];
+        this.viewsCount = 0;
+        return;
+      }
+
+      const fav$ = this.videoService.getVideosByIds(user.favoriteVideos);
+      const liked$ = this.videoService.getVideosByIds(user.likedVideos);
+      forkJoin([fav$, liked$]).subscribe(([favVideos, likedVideos]) => {
+        this.favoriteVideos = favVideos;
+        this.likedVideos = likedVideos;
+        this.viewsCount = user.watchHistory ? user.watchHistory.length : 0;
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -63,6 +92,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your billing period.')) {
       this.subscriptionService.cancelSubscription();
     }
+  }
+
+  removeFavorite(videoId: string): void {
+    this.userService.removeFromFavorites(videoId).subscribe(success => {
+      if (success) {
+        this.favoriteVideos = this.favoriteVideos.filter(v => v.id !== videoId);
+      }
+    });
   }
 
   /**

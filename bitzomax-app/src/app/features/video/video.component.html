@@ -56,12 +56,16 @@
                 
                 <!-- Right Controls -->
                 <div class="flex items-center space-x-4">
-                  <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors" 
+                  <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors"
                     [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
                     <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                     <span>{{ video.likes }}</span>
                   </button>
-                  <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors" 
+                  <button (click)="toggleFavorite()" class="text-electric-blue hover:text-neon-green transition-colors"
+                    [attr.aria-label]="isFavorited ? 'Remove from favorites' : 'Add to favorites'">
+                    <i class="fas" [ngClass]="isFavorited ? 'fa-star' : 'fa-star-o'"></i>
+                  </button>
+                  <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors"
                     aria-label="Share video">
                     <i class="fas fa-share-alt"></i>
                   </button>
@@ -268,12 +272,16 @@
               
               <!-- Right Controls -->
               <div class="flex items-center space-x-4">
-                <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors" 
+                <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors"
                   [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
                   <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                   <span>{{ video.likes }}</span>
                 </button>
-                <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors" 
+                <button (click)="toggleFavorite()" class="text-electric-blue hover:text-neon-green transition-colors"
+                  [attr.aria-label]="isFavorited ? 'Remove from favorites' : 'Add to favorites'">
+                  <i class="fas" [ngClass]="isFavorited ? 'fa-star' : 'fa-star-o'"></i>
+                </button>
+                <button (click)="openShareModal()" class="flex items-center space-x-2 text-electric-blue hover:text-neon-green transition-colors"
                   aria-label="Share video">
                   <i class="fas fa-share-alt"></i>
                 </button>
