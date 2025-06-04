@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { SubscriptionService } from '../../core/services/subscription.service';
+import { UserService } from '../../core/services/user.service';
 
 @Component({
   selector: 'app-profile',
@@ -17,10 +18,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   subscriptionStartDate: Date = new Date();
   subscriptionEndDate: Date | null = null;
   subscriptionPercentRemaining = 0;
+  favoriteCount = 0;
+  likeCount = 0;
   
   private subscriptions: Subscription = new Subscription();
 
-  constructor(private subscriptionService: SubscriptionService) { }
+  constructor(
+    private subscriptionService: SubscriptionService,
+    private userService: UserService
+  ) { }
 
   ngOnInit(): void {
     // Subscribe to subscription status changes
@@ -41,6 +47,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     // Initial state
     this.isSubscribed = this.subscriptionService.isSubscribed();
+
+    // Load user stats
+    this.userService.getCurrentUser().subscribe(user => {
+      this.favoriteCount = user?.favoriteVideos.length || 0;
+      this.likeCount = user?.likedVideos.length || 0;
+    });
   }
 
   ngOnDestroy(): void {

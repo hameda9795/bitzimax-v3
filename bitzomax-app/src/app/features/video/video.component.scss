@@ -94,6 +94,10 @@
   }
 }
 
+.video-controls {
+  z-index: 5;
+}
+
 // Desktop layout fix
 @media (min-width: 1024px) {
   .hidden.lg\:flex {
