@@ -26,6 +26,7 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
   currentTime = 0;
   duration = 0;
   isLiked = false;
+  isFavorited = false;
   showSubscriptionBanner = false;
   isSubscribed = false;
   baseUrl = 'http://localhost:8080';
@@ -147,9 +148,10 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
                   }));
                 });
                 
-                // Check if the video is liked by the user
+                // Check if the video is liked or favorited by the user
                 this.userService.getCurrentUser().subscribe(user => {
-                  this.isLiked = user && user.likedVideos ? user.likedVideos.includes(video.id) : false;
+                  this.isLiked = !!(user && user.likedVideos && user.likedVideos.includes(video.id));
+                  this.isFavorited = !!(user && user.favoriteVideos && user.favoriteVideos.includes(video.id));
                 });
               }
             })
@@ -341,6 +343,20 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
         this.videoService.unlikeVideo(this.video!.id).subscribe(() => {
           if (this.video && this.video.likes > 0) this.video.likes--;
         });
+      }
+    });
+  }
+
+  toggleFavorite(): void {
+    if (!this.video) return;
+
+    const action$ = this.isFavorited
+      ? this.userService.removeFromFavorites(this.video.id)
+      : this.userService.addToFavorites(this.video.id);
+
+    action$.subscribe(success => {
+      if (success) {
+        this.isFavorited = !this.isFavorited;
       }
     });
   }

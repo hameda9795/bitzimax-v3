@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpEvent, HttpEventType, HttpParams, HttpRequest, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError, catchError, map, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, catchError, map, tap, forkJoin } from 'rxjs';
 import { Video } from '../../shared/models/video.model';
 import { PageRequest, PageResponse } from '../../shared/models/pagination.model';
 import { UrlService } from './url.service';
@@ -343,6 +343,20 @@ export class VideoService {
           return this.handleError(error);
         })
       );
+  }
+
+  /**
+   * Retrieve multiple videos by their IDs
+   */
+  getVideosByIds(ids: string[]): Observable<Video[]> {
+    if (ids.length === 0) {
+      return of([]);
+    }
+
+    const requests = ids.map(id => this.getVideoById(id));
+    return forkJoin(requests).pipe(
+      map(videos => videos.filter((v): v is Video => v !== undefined))
+    );
   }
 
   /**
