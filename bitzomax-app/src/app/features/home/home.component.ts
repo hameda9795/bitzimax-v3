@@ -135,15 +135,38 @@ export class HomeComponent implements OnInit {
    */
   toggleLike(video: Video, event: Event): void {
     event.stopPropagation(); // Prevent navigation to video
-    
+
     this.userService.toggleVideoLike(video.id).subscribe(isLiked => {
-      // If video was liked, increment like count, otherwise decrement
+      // Update local like count based on new status
       if (isLiked) {
-        this.videoService.likeVideo(video.id).subscribe();
-      } else {
-        this.videoService.unlikeVideo(video.id).subscribe();
+        video.likes++;
+      } else if (video.likes > 0) {
+        video.likes--;
       }
     });
+  }
+
+  /**
+   * Toggle favorite status for a video
+   */
+  toggleFavorite(video: Video, event: Event): void {
+    event.stopPropagation();
+
+    if (this.isFavorited(video.id)) {
+      this.userService.removeFromFavorites(video.id).subscribe();
+    } else {
+      this.userService.addToFavorites(video.id).subscribe();
+    }
+  }
+
+  /**
+   * Check if the current user favorited the video
+   */
+  isFavorited(videoId: string): boolean {
+    const currentUser = this.userService.getCurrentUserSync();
+    return currentUser && currentUser.favoriteVideos
+      ? currentUser.favoriteVideos.includes(videoId)
+      : false;
   }
 
   /**

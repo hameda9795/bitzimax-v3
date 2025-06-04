@@ -122,37 +122,38 @@
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Favorite Video 1 -->
-          <div class="flex border border-neon-green rounded-lg overflow-hidden bg-cyber-black">
+          <div *ngFor="let video of favoriteVideos" class="flex border border-neon-green rounded-lg overflow-hidden bg-cyber-black">
             <div class="w-1/3 aspect-[9/16] relative">
-              <img src="https://via.placeholder.com/320x640/0a0014/00ff9f?text=Fav1" alt="Favorite video" class="w-full h-full object-cover">
+              <img [src]="video.thumbnailUrl" [alt]="video.title" class="w-full h-full object-cover">
             </div>
             <div class="w-2/3 p-3 flex flex-col">
-              <h4 class="text-electric-blue font-bold line-clamp-2 flex-grow">Neon Dystopia</h4>
+              <h4 class="text-electric-blue font-bold line-clamp-2 flex-grow">{{ video.title }}</h4>
               <div class="flex justify-between mt-2 text-xs">
-                <span class="text-neon-green">2.4k views</span>
-                <button class="text-hot-pink" title="Remove from favorites">
-                  <i class="fas fa-heart"></i>
-                </button>
+                <span class="text-neon-green">{{ video.views | number }} views</span>
               </div>
             </div>
           </div>
-          
-          <!-- Favorite Video 2 -->
-          <div class="flex border border-neon-green rounded-lg overflow-hidden bg-cyber-black">
+          <div *ngIf="favoriteVideos.length === 0" class="text-gray-400">No favorite videos yet.</div>
+        </div>
+
+        <!-- Liked Videos -->
+        <h2 class="text-2xl font-bold text-hot-pink mb-4 border-l-4 border-hot-pink pl-4 mt-8">
+          Liked Videos
+        </h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngFor="let video of likedVideos" class="flex border border-electric-blue rounded-lg overflow-hidden bg-cyber-black">
             <div class="w-1/3 aspect-[9/16] relative">
-              <img src="https://via.placeholder.com/320x640/0a0014/00e1ff?text=Fav2" alt="Favorite video" class="w-full h-full object-cover">
+              <img [src]="video.thumbnailUrl" [alt]="video.title" class="w-full h-full object-cover">
             </div>
             <div class="w-2/3 p-3 flex flex-col">
-              <h4 class="text-electric-blue font-bold line-clamp-2 flex-grow">Digital Dreams</h4>
+              <h4 class="text-electric-blue font-bold line-clamp-2 flex-grow">{{ video.title }}</h4>
               <div class="flex justify-between mt-2 text-xs">
-                <span class="text-neon-green">3.8k views</span>
-                <button class="text-hot-pink" title="Remove from favorites">
-                  <i class="fas fa-heart"></i>
-                </button>
+                <span class="text-neon-green">{{ video.views | number }} views</span>
               </div>
             </div>
           </div>
+          <div *ngIf="likedVideos.length === 0" class="text-gray-400">No liked videos yet.</div>
         </div>
       </div>
     </div>

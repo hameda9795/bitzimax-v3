@@ -334,15 +334,11 @@ export class VideoComponent implements OnInit, OnDestroy, AfterViewInit {
     
     this.userService.toggleVideoLike(this.video.id).subscribe(isLiked => {
       this.isLiked = isLiked;
-      
+
       if (isLiked) {
-        this.videoService.likeVideo(this.video!.id).subscribe(() => {
-          if (this.video) this.video.likes++;
-        });
-      } else {
-        this.videoService.unlikeVideo(this.video!.id).subscribe(() => {
-          if (this.video && this.video.likes > 0) this.video.likes--;
-        });
+        if (this.video) this.video.likes++;
+      } else if (this.video && this.video.likes > 0) {
+        this.video.likes--;
       }
     });
   }

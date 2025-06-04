@@ -54,11 +54,17 @@
               <div class="p-3 border-t border-neon-green bg-opacity-30 mt-auto">
                 <div class="flex justify-between items-center">
                   <span class="text-electric-blue text-xs">{{ video.views | number }} views</span>
-                  <button (click)="toggleLike(video, $event)" 
-                          class="text-hot-pink hover:text-neon-green transition-colors">
-                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                    <span class="ml-1 text-xs">{{ video.likes }}</span>
-                  </button>
+                  <div class="flex items-center space-x-2">
+                    <button (click)="toggleLike(video, $event)"
+                            class="text-hot-pink hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                      <span class="ml-1 text-xs">{{ video.likes }}</span>
+                    </button>
+                    <button (click)="toggleFavorite(video, $event)"
+                            class="text-electric-blue hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-bookmark]="isFavorited(video.id)" [class.fa-bookmark-o]="!isFavorited(video.id)"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -92,11 +98,17 @@
               <div class="p-2 border-t border-electric-blue bg-opacity-30 mt-auto">
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-electric-blue">{{ video.views | number }} views</span>
-                  <button (click)="toggleLike(video, $event)" 
-                          class="text-hot-pink hover:text-neon-green transition-colors">
-                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                    <span class="ml-1">{{ video.likes }}</span>
-                  </button>
+                  <div class="flex items-center space-x-2">
+                    <button (click)="toggleLike(video, $event)"
+                            class="text-hot-pink hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                      <span class="ml-1">{{ video.likes }}</span>
+                    </button>
+                    <button (click)="toggleFavorite(video, $event)"
+                            class="text-electric-blue hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-bookmark]="isFavorited(video.id)" [class.fa-bookmark-o]="!isFavorited(video.id)"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -130,11 +142,17 @@
               <div class="p-2 border-t border-hot-pink bg-opacity-30 mt-auto">
                 <div class="flex justify-between items-center text-xs">
                   <span class="text-electric-blue">{{ video.views | number }} views</span>
-                  <button (click)="toggleLike(video, $event)" 
-                          class="text-hot-pink hover:text-neon-green transition-colors">
-                    <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
-                    <span class="ml-1">{{ video.likes }}</span>
-                  </button>
+                  <div class="flex items-center space-x-2">
+                    <button (click)="toggleLike(video, $event)"
+                            class="text-hot-pink hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-heart]="isLiked(video.id)" [class.fa-heart-o]="!isLiked(video.id)"></i>
+                      <span class="ml-1">{{ video.likes }}</span>
+                    </button>
+                    <button (click)="toggleFavorite(video, $event)"
+                            class="text-electric-blue hover:text-neon-green transition-colors">
+                      <i class="fas" [class.fa-bookmark]="isFavorited(video.id)" [class.fa-bookmark-o]="!isFavorited(video.id)"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

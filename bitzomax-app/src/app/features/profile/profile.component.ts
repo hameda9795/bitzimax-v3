@@ -1,9 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin } from 'rxjs';
 import { SubscriptionService } from '../../core/services/subscription.service';
 import { UserService } from '../../core/services/user.service';
+import { VideoService } from '../../core/services/video.service';
+import { Video } from '../../shared/models/video.model';
 
 @Component({
   selector: 'app-profile',
@@ -20,12 +22,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   subscriptionPercentRemaining = 0;
   favoriteCount = 0;
   likeCount = 0;
+  favoriteVideos: Video[] = [];
+  likedVideos: Video[] = [];
   
   private subscriptions: Subscription = new Subscription();
 
   constructor(
     private subscriptionService: SubscriptionService,
-    private userService: UserService
+    private userService: UserService,
+    private videoService: VideoService
   ) { }
 
   ngOnInit(): void {
@@ -48,10 +53,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
     // Initial state
     this.isSubscribed = this.subscriptionService.isSubscribed();
 
-    // Load user stats
+    // Load user stats and videos
     this.userService.getCurrentUser().subscribe(user => {
       this.favoriteCount = user?.favoriteVideos.length || 0;
       this.likeCount = user?.likedVideos.length || 0;
+
+      const favRequests = user?.favoriteVideos.map(id => this.videoService.getVideoById(id)) || [];
+      const likeRequests = user?.likedVideos.map(id => this.videoService.getVideoById(id)) || [];
+
+      if (favRequests.length) {
+        forkJoin(favRequests).subscribe(videos => {
+          this.favoriteVideos = videos.filter((v): v is Video => !!v);
+        });
+      }
+
+      if (likeRequests.length) {
+        forkJoin(likeRequests).subscribe(videos => {
+          this.likedVideos = videos.filter((v): v is Video => !!v);
+        });
+      }
     });
   }
 
