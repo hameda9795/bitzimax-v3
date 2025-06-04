@@ -56,12 +56,14 @@
                 
                 <!-- Right Controls -->
                 <div class="flex items-center space-x-4">
-                  <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors"
+                  <button (click)="toggleLike()" class="flex items-center space-x-2 transition-colors"
+                    [ngClass]="isLiked ? 'text-neon-green' : 'text-hot-pink hover:text-neon-green'"
                     [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
                     <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                     <span>{{ video.likes }}</span>
                   </button>
-                  <button (click)="toggleFavorite()" class="text-electric-blue hover:text-neon-green transition-colors"
+                  <button (click)="toggleFavorite()" class="transition-colors"
+                    [ngClass]="isFavorited ? 'text-neon-green' : 'text-electric-blue hover:text-neon-green'"
                     [attr.aria-label]="isFavorited ? 'Remove from favorites' : 'Add to favorites'">
                     <i class="fas" [ngClass]="isFavorited ? 'fa-bookmark' : 'fa-bookmark-o'"></i>
                   </button>
@@ -272,12 +274,14 @@
               
               <!-- Right Controls -->
               <div class="flex items-center space-x-4">
-                <button (click)="toggleLike()" class="flex items-center space-x-2 text-hot-pink hover:text-neon-green transition-colors"
+                <button (click)="toggleLike()" class="flex items-center space-x-2 transition-colors"
+                  [ngClass]="isLiked ? 'text-neon-green' : 'text-hot-pink hover:text-neon-green'"
                   [attr.aria-label]="isLiked ? 'Unlike video' : 'Like video'">
                   <i class="fas" [ngClass]="isLiked ? 'fa-heart' : 'fa-heart-o'"></i>
                   <span>{{ video.likes }}</span>
                 </button>
-                <button (click)="toggleFavorite()" class="text-electric-blue hover:text-neon-green transition-colors"
+                <button (click)="toggleFavorite()" class="transition-colors"
+                  [ngClass]="isFavorited ? 'text-neon-green' : 'text-electric-blue hover:text-neon-green'"
                   [attr.aria-label]="isFavorited ? 'Remove from favorites' : 'Add to favorites'">
                   <i class="fas" [ngClass]="isFavorited ? 'fa-bookmark' : 'fa-bookmark-o'"></i>
                 </button>

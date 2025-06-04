@@ -29,7 +29,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatMenuModule } from '@angular/material/menu';
 
 // Chart.js
-import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { NgChartsModule } from 'ng2-charts';
 
 // File Upload
 import { NgxDropzoneModule } from 'ngx-dropzone';
@@ -77,7 +77,7 @@ const materialModules = [
     FormsModule,
     ReactiveFormsModule,
     ...materialModules,
-    BaseChartDirective,
+    NgChartsModule,
     NgxDropzoneModule,
     // Import standalone components instead of declaring them
     DashboardComponent,
@@ -88,8 +88,6 @@ const materialModules = [
     GenreManagementComponent,
     ConfirmDialogComponent
   ],
-  providers: [
-    provideCharts(withDefaultRegisterables())
-  ]
+  providers: []
 })
 export class AdminModule { }
